@@ -8,6 +8,8 @@
 
 #define WITH_UIP 1
 #define WITH_ASCII 1
+#define UIP_CONF_DHCP_LIGHT 1
+#define WITH_PHASE_OPTIMIZATION 0
 
 #define F_CPU 8000000
 #define RTIMER_ARCH_PRESCALER 1024
@@ -27,13 +29,11 @@ typedef unsigned int uip_stats_t;
 #define UIP_CONF_LLH_LEN         0
 #define UIP_CONF_BROADCAST       1
 #define UIP_CONF_LOGGING 1
-#define UIP_CONF_BUFFER_SIZE 1500
+#define UIP_CONF_BUFFER_SIZE 1000
 
 #define UIP_CONF_TCP_FORWARD 0
 
 /* Prefix for relocation sections in ELF files */
-#define REL_SECT_PREFIX ".rel"
-
 
 #define RAND_MAX 0x7fff
 #endif /* __CONTIKI_CONF_H__DPWEBPLATFORM__ */

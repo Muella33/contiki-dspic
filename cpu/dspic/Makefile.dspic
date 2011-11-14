@@ -9,40 +9,39 @@ MPLABC_HOMEW=$(shell dirname "$(MPLABC_BINW)")
 MPLABC_HOME=$(shell cygpath -m "$(MPLABC_HOMEW)")
 
 ### Compiler definitions
-CC       = pic30-gcc
+CC       = pic30-gcc -omf=elf
 LD       = pic30-gcc
 AS       = pic30-as
 AR       = pic30-ar
 OBJCOPY  = pic30-objcopy
 STRIP    = pic30-strip
-CFLAGSNO = -mcpu=33FJ128GP204 -Wall -g -omf=elf -I/usr/local/include -I"$(MPLABC_HOME)/support/dsPIC33F/h" -I$(CONTIKI)/platform/$(TARGET) \
-             -I$(CONTIKI)/core -I$(CONTIKI_CPU) -D__dsPIC33FJ128GP204__=1
+BIN2HEX  = pic30-bin2hex
+
+## -I/usr/local/include
+
+CFLAGSNO = -mcpu=33FJ128GP204 -Wall -g -I"$(MPLABC_HOME)/support/dsPIC33F/h" -I$(CONTIKI)/platform/$(TARGET) \
+             -I$(CONTIKI)/core -I$(CONTIKI_CPU) -ffunction-sections -D__dsPIC33FJ128GP204__=1
 CFLAGS  += $(CFLAGSNO)
-LDFLAGS  = -omf=elf -mcpu=33FJ128GP204 -Wl,--defsym=__MPLAB_BUILD=1,-Map=contiki-$(TARGET).map,-Tp33FJ128GP204.gld,--report-mem 
-#	-Wl,-L"C:\Program Files\Microchip\MPLAB C30\lib",--defsym=__MPLAB_BUILD=1,-Tp33FJ128MC802.gld,
-#	--defsym=__MPLAB_BUILD=1,
+LDFLAGS  = -omf=elf -mcpu=33FJ128GP204 -Wl,--gc-sections,--defsym=__MPLAB_BUILD=1,-Map=contiki-$(TARGET).map,-Tp33FJ128GP204.gld,--report-mem,--heap=128
+AROPTS = -omf=elf rcf
+
+## Flags MPLABX applies to pic30-gcc (not yet applied)
 #	--defsym=__MPLAB_DEBUG=1,
+#  dependancy annotation:   -MMD -MF <blah>.o.d
 
-AROPTS = -omf=elf rcfs
+## Microchip linker discards _main symbol from librarian .a file, so cannot link
+#  the result   http://www.microchip.com/forums/m550276-print.aspx
+# This causes much longer builds as Contiki cannot be pre-compiled to archived elf format
 
-## DEADCODESTRIP := -Wl,-static -fvtable-gc -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,-s
-## foo : foo.c
-##    g++ $(DEADCODESTRIP) $< -o $@
+CUSTOM_RULE_ALLOBJS_TO_TARGETLIB=1
+CUSTOM_RULE_LINK =1
+.PRECIOUS: %.$(TARGET).hex
+## rewrite end taget:  .hex <--bin2hex-- .elf  <--linker--  *.co 
+%.$(TARGET).elf: %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_OBJECTFILES)
+	$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
 
-### Compilation rules
+%.$(TARGET).hex: %.$(TARGET).elf
+	$(BIN2HEX) %.$(TARGET).elf -omf=elf
 
-%.so: $(OBJECTDIR)/%.o
-	$(LD) -shared -o $@ $^
-
-# .PHONY: symbols.c symbols.h
-ifdef CORE
-symbols.c symbols.h:
-	$(NM) $(CORE) | awk -f $(CONTIKI)/tools/mknmlist > symbols.c
-else
-symbols.c symbols.h:
-	cp ${CONTIKI}/tools/empty-symbols.c symbols.c
-	cp ${CONTIKI}/tools/empty-symbols.h symbols.h
-endif
-
-
-
+%: %.$(TARGET).hex
+	@
