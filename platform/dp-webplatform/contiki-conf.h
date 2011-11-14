@@ -1,0 +1,39 @@
+#ifndef __CONTIKI_CONF_H__DPWEBPLATFORM__
+#define __CONTIKI_CONF_H__DPWEBPLATFORM__
+
+#include <stdint.h>
+
+#define CCIF
+#define CLIF
+
+#define WITH_UIP 1
+#define WITH_ASCII 1
+
+#define F_CPU 8000000
+#define RTIMER_ARCH_PRESCALER 1024
+
+#define CLOCK_CONF_SECOND 100
+typedef uint8_t u8_t;
+typedef uint16_t u16_t;
+typedef uint32_t u32_t;
+typedef int8_t s8_t;
+typedef int16_t s16_t;
+typedef int32_t s32_t;
+
+typedef unsigned int clock_time_t;
+typedef unsigned int uip_stats_t;
+
+/* uIP configuration */
+#define UIP_CONF_LLH_LEN         0
+#define UIP_CONF_BROADCAST       1
+#define UIP_CONF_LOGGING 1
+#define UIP_CONF_BUFFER_SIZE 1500
+
+#define UIP_CONF_TCP_FORWARD 0
+
+/* Prefix for relocation sections in ELF files */
+#define REL_SECT_PREFIX ".rel"
+
+
+#define RAND_MAX 0x7fff
+#endif /* __CONTIKI_CONF_H__DPWEBPLATFORM__ */

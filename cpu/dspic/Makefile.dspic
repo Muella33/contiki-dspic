@@ -1,0 +1,48 @@
+CONTIKI_CPU_DIRS = .
+
+## CONTIKI_SOURCEFILES += mtarch.c elfloader-x86.c
+CONTIKI_CPU=$(CONTIKI)/cpu/dspic
+
+# grab path to MPLAB support files (cygwin, on win32 only)
+MPLABC_BINW=$(shell dirname "`which pic30-gcc`")
+MPLABC_HOMEW=$(shell dirname "$(MPLABC_BINW)")
+MPLABC_HOME=$(shell cygpath -m "$(MPLABC_HOMEW)")
+
+### Compiler definitions
+CC       = pic30-gcc
+LD       = pic30-gcc
+AS       = pic30-as
+AR       = pic30-ar
+OBJCOPY  = pic30-objcopy
+STRIP    = pic30-strip
+CFLAGSNO = -mcpu=33FJ128GP204 -Wall -g -omf=elf -I/usr/local/include -I"$(MPLABC_HOME)/support/dsPIC33F/h" -I$(CONTIKI)/platform/$(TARGET) \
+             -I$(CONTIKI)/core -I$(CONTIKI_CPU) -D__dsPIC33FJ128GP204__=1
+CFLAGS  += $(CFLAGSNO)
+LDFLAGS  = -omf=elf -mcpu=33FJ128GP204 -Wl,--defsym=__MPLAB_BUILD=1,-Map=contiki-$(TARGET).map,-Tp33FJ128GP204.gld,--report-mem 
+#	-Wl,-L"C:\Program Files\Microchip\MPLAB C30\lib",--defsym=__MPLAB_BUILD=1,-Tp33FJ128MC802.gld,
+#	--defsym=__MPLAB_BUILD=1,
+#	--defsym=__MPLAB_DEBUG=1,
+
+AROPTS = -omf=elf rcfs
+
+## DEADCODESTRIP := -Wl,-static -fvtable-gc -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,-s
+## foo : foo.c
+##    g++ $(DEADCODESTRIP) $< -o $@
+
+### Compilation rules
+
+%.so: $(OBJECTDIR)/%.o
+	$(LD) -shared -o $@ $^
+
+# .PHONY: symbols.c symbols.h
+ifdef CORE
+symbols.c symbols.h:
+	$(NM) $(CORE) | awk -f $(CONTIKI)/tools/mknmlist > symbols.c
+else
+symbols.c symbols.h:
+	cp ${CONTIKI}/tools/empty-symbols.c symbols.c
+	cp ${CONTIKI}/tools/empty-symbols.h symbols.h
+endif
+
+
+
