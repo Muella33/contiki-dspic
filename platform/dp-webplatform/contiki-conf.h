@@ -14,7 +14,7 @@
 #define PROCESS_CONF_NO_PROCESS_NAMES 0
  
 #define F_CPU 8000000
-#define RTIMER_ARCH_PRESCALER 1024
+#define RTIMER_ARCH_PRESCALER 256
 
 #define CLOCK_CONF_SECOND 100
 typedef uint8_t u8_t;
@@ -31,7 +31,7 @@ typedef unsigned int uip_stats_t;
 #define UIP_CONF_LLH_LEN 0
 #define UIP_CONF_BROADCAST 1
 #define UIP_CONF_LOGGING 1
-#define UIP_CONF_BUFFER_SIZE 300
+#define UIP_CONF_BUFFER_SIZE 100
 
 #define UIP_CONF_TCP_FORWARD 0
 

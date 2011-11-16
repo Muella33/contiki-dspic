@@ -33,12 +33,11 @@
 
 /**
  * \file
- *         PIC specific timer code, using hardware Timer 2/3
+ *     PIC specific millisecond timer code, using hardware Timer 2
+ *
  * \author
  *         Chris Shucksmith <chris@shucksmith.co.uk>
   */
-
-/* OBS: 8 seconds maximum time! */
 
 #include <stdio.h>
 #include <p33Fxxxx.h>
@@ -46,152 +45,74 @@
 #include "sys/energest.h"
 #include "sys/rtimer.h"
 #include "rtimer-arch.h"
+#include "contiki-conf.h"
 
-/* Track flow through rtimer interrupts*/
-#if DEBUGFLOWSIZE&&0
-extern uint8_t debugflowsize,debugflow[DEBUGFLOWSIZE];
-#define DEBUGFLOW(c) if (debugflowsize<(DEBUGFLOWSIZE-1)) debugflow[debugflowsize++]=c
-#else
-#define DEBUGFLOW(c)
-#endif
+volatile unsigned long milliseconds = 0;
+volatile unsigned long rcounter = 0;
 
-/*---------------------------------------------------------------------------*/
-#if defined(TCNT3) && RTIMER_ARCH_PRESCALER
-ISR (TIMER3_COMPA_vect) {
-  DEBUGFLOW('/');
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
 
-  /* Disable rtimer interrupts */
-  ETIMSK &= ~((1 << OCIE3A) | (1 << OCIE3B) | (1 << TOIE3) |
-      (1 << TICIE3) | (1 << OCIE3C));
-
-#if RTIMER_CONF_NESTED_INTERRUPTS
-  /* Enable nested interrupts. Allows radio interrupt during rtimer interrupt. */
-  /* All interrupts are enabled including recursive rtimer, so use with caution */
-  sei();
-#endif
-
-  /* Call rtimer callback */
-  rtimer_run_next();
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
-  DEBUGFLOW('\\');
-}
-
-#elif RTIMER_ARCH_PRESCALER
-#warning "No Timer3 in rtimer-arch.c - using Timer1 instead"
-ISR (TIMER1_COMPA_vect) {
-  DEBUGFLOW('/');
-  TIMSK &= ~((1<<TICIE1)|(1<<OCIE1A)|(1<<OCIE1B)|(1<<TOIE1));
-
-  rtimer_run_next();
-  DEBUGFLOW('\\');
-}
-
-#endif
-/*---------------------------------------------------------------------------*/
-void
-rtimer_arch_init(void)
+/* code for Timer2 ISR */
+void __attribute__((__interrupt__, no_auto_psv)) _T2Interrupt(void)
 {
-#if RTIMER_ARCH_PRESCALER
-  /* Disable interrupts (store old state) */
-  uint8_t sreg;
-  sreg = SREG;
-  cli ();
+	IFS0bits.T2IF = 0;  // Clear Timer1 Interrupt Flag
+	
+	milliseconds++;
+    if (rcounter == 1) rtimer_run_next();
+	if (rcounter > 0) rcounter--;
 
-#ifdef TCNT3
-  /* Disable all timer functions */
-  ETIMSK &= ~((1 << OCIE3A) | (1 << OCIE3B) | (1 << TOIE3) |
-      (1 << TICIE3) | (1 << OCIE3C));
-  /* Write 1s to clear existing timer function flags */
-  ETIFR |= (1 << ICF3) | (1 << OCF3A) | (1 << OCF3B) | (1 << TOV3) |
-  (1 << OCF3C); 
+}
 
-  /* Default timer behaviour */
-  TCCR3A = 0;
-  TCCR3B = 0;
-  TCCR3C = 0;
+void rtimer_arch_init(void) {
 
-  /* Reset counter */
-  TCNT3 = 0;
-
-#if RTIMER_ARCH_PRESCALER==1024
-  TCCR3B |= 5;
-#elif RTIMER_ARCH_PRESCALER==256
-  TCCR3B |= 4;
+    rcounter = 0;
+    // Fosc = 80Mhz, prescale of 1:256 = Fin = 312500Hz = 3.2uSec
+    //   reload register 313 => 313x3.2uSec => interupt rate of 1001.6 uSec ~ 1ms
+    T2CONbits.TON = 0; // Disable Timer
+    T2CONbits.TCS = 0; // Select internal instruction cycle clock
+    T2CONbits.TGATE = 0; // Disable Gated Timer mode
+    //bit 5-4 TCKPS<1:0>: Timerx Input Clock Prescale Select bits
+    //    11 = 1:256 prescale value
+    //    10 = 1:64 prescale value
+    //    01 = 1:8 prescale value
+    //    00 = 1:1 prescale value
+#if RTIMER_ARCH_PRESCALER==256
+    T2CONbits.TCKPS = 0b11; // Select 1:256 Prescaler
 #elif RTIMER_ARCH_PRESCALER==64
-  TCCR3B |= 3;
+    T2CONbits.TCKPS = 0b10; // Select 1:64 Prescaler
 #elif RTIMER_ARCH_PRESCALER==8
-  TCCR3B |= 2;
+	T2CONbits.TCKPS = 0b01; // Select 1:8 Prescaler
 #elif RTIMER_ARCH_PRESCALER==1
-  TCCR3B |= 1;
+    T2CONbits.TCKPS = 0b00; // Select 1:1 prescale value
 #else
-#error Timer3 PRESCALER factor not supported.
+#error Timer2 RTIMER_ARCH_PRESCALER factor not supported.
 #endif
 
-#elif RTIMER_ARCH_PRESCALER
-  /* Leave timer1 alone if PRESCALER set to zero */
-  /* Obviously you can not then use rtimers */
-
-  TIMSK &= ~((1<<TICIE1)|(1<<OCIE1A)|(1<<OCIE1B)|(1<<TOIE1));
-  TIFR |= (1 << ICF1) | (1 << OCF1A) | (1 << OCF1B) | (1 << TOV1);
-
-  /* Default timer behaviour */
-  TCCR1A = 0;
-  TCCR1B = 0;
-
-  /* Reset counter */
-  TCNT1 = 0;
-
-  /* Start clock */
-#if RTIMER_ARCH_PRESCALER==1024
-  TCCR1B |= 5;
-#elif RTIMER_ARCH_PRESCALER==256
-  TCCR1B |= 4;
-#elif RTIMER_ARCH_PRESCALER==64
-  TCCR1B |= 3;
-#elif RTIMER_ARCH_PRESCALER==8
-  TCCR1B |= 2;
-#elif RTIMER_ARCH_PRESCALER==1
-  TCCR1B |= 1;
-#else
-#error Timer1 PRESCALER factor not supported.
-#endif
-
-#endif /* TCNT3 */
+    TMR2 = 0x00;  // Clear timer register
+    PR2 = 313;  // Load the period value
+    IPC1bits.T2IP = 0x01; // Set Timer2 Interrupt Priority Level
+    IFS0bits.T2IF = 0; // Clear Timer2 Interrupt Flag
+    IEC0bits.T2IE = 1; // Enable Timer2 interrupt
+    T2CONbits.TON = 1; // Start Timer
 
   /* Restore interrupt state */
-  SREG = sreg;
-#endif /* RTIMER_ARCH_PRESCALER */
+
+  }
+
+void rtimer_arch_schedule(rtimer_clock_t t) {
+	rcounter = t;
 }
-/*---------------------------------------------------------------------------*/
-void
-rtimer_arch_schedule(rtimer_clock_t t)
+
+/**
+ * Blocking delay for a multiple of milliseconds
+ */
+void clock_delay(unsigned int i)
 {
-#if RTIMER_ARCH_PRESCALER
-  /* Disable interrupts (store old state) */
-  uint8_t sreg;
-  sreg = SREG;
-  cli ();
-  DEBUGFLOW(':');
-#ifdef TCNT3
-  /* Set compare register */
-  OCR3A = t;
-  /* Write 1s to clear all timer function flags */
-  ETIFR |= (1 << ICF3) | (1 << OCF3A) | (1 << OCF3B) | (1 << TOV3) |
-  (1 << OCF3C);
-  /* Enable interrupt on OCR3A match */
-  ETIMSK |= (1 << OCIE3A);
-
-#elif RTIMER_ARCH_PRESCALER
-  /* Set compare register */
-  OCR1A = t;
-  TIFR |= (1 << ICF1) | (1 << OCF1A) | (1 << OCF1B) | (1 << TOV1);
-  TIMSK |= (1 << OCIE1A);
-
-#endif
-
-  /* Restore interrupt state */
-  SREG = sreg;
-#endif /* RTIMER_ARCH_PRESCALER */
+	unsigned long waitfor = milliseconds + i;
+	if (waitfor < milliseconds) { 
+		while (milliseconds > 1000) { }; // wait for overflow		
+		while (milliseconds < waitfor) { }; // wait for expiry
+	} else {
+		while (milliseconds < waitfor) { };	// wait for expiry
+	}
+	
 }

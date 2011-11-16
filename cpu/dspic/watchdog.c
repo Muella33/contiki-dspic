@@ -68,5 +68,5 @@ watchdog_stop(void)
 void
 watchdog_reboot(void)
 {
-  halReboot();
+  
 }
