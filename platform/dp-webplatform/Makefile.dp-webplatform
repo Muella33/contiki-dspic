@@ -2,11 +2,15 @@ CONTIKI_TARGET_DIRS = . apps net
 CONTIKI_CORE=contiki-dp-webplatform
 CONTIKI_TARGET_MAIN = ${CONTIKI_CORE}.o
 
-CONTIKI_TARGET_SOURCEFILES += contiki-dp-webplatform-main.c
+CONTIKI_TARGET_SOURCEFILES += contiki-dp-webplatform-main.c leds-arch.c
 
 CONTIKIPIC=$(CONTIKI)/cpu/dspic
 CONTIKIBOARD=.
 
+CONTIKI_NO_NET=1
+
 CONTIKI_PLAT_DEFS=
+
+CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 include $(CONTIKIPIC)/Makefile.dspic

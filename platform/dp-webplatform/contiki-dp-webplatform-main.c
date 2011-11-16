@@ -1,12 +1,14 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/process.h>
+#include <dev/leds.h>
 #include <sys/procinit.h>
 #include <etimer.h>
 #include <sys/autostart.h>
 #include <clock.h>
+#include <p33Fxxxx.h>
 
-//it's important to keep configuration bits that are compatibale with the bootloader
+//it's important to keep configuration bits that are compatible with the bootloader
 //if you change it from the internall/PLL clock, the bootloader won't run correctly
 
 _FOSCSEL(FNOSC_FRCPLL)		//INT OSC with PLL (always keep this setting)
@@ -14,11 +16,13 @@ _FOSC(OSCIOFNC_OFF & POSCMD_NONE)	//disable external OSC (always keep this setti
 _FWDT(FWDTEN_OFF)				//watchdog timer off
 _FICD(JTAGEN_OFF & 0b11);//JTAG debugging off, debugging on PG1 pins enabled
 
+#define SD_TRIS                       TRISAbits.TRISA10
+#define SD_IO                         LATAbits.LATA10
+
 
 unsigned int idle_count = 0;
 
-int
-main()
+int main()
 {
 
 	AD1PCFGL = 0xFFFF; //digital pins
@@ -36,10 +40,10 @@ main()
 	//you could also output one (or both) of the two available UARTS to the I/O header
 	//assign pin 14 to the UART1 RX input register
 	//RX PR14 (input)
-	U1RXR_I = 14;
+	RPINR18bits.U1RXR = 14;
 	//assign UART1 TX function to the pin 15 output register
 	//TX RP15 (output)
-	RP15_O=U1TX_O;
+	RPOR7bits.RP15R = 3; // U1TX_O
 
 	//InitializeUART1();	
 	//setup UART
@@ -50,15 +54,10 @@ main()
     U1MODEbits.UARTEN = 1; //enable the UART RX
     IFS0bits.U1RXIF = 0;  //clear the receive flag
 
-	//setup LEDs
-	SD_TRIS = 0; //set pin direction to output
-	IO1_TRIS = 0;
-	LD1_TRIS = 0;
-	SD_O = 1;	//set all pins high (LED on)
-	LD1_O = 1;
-	IO1_O=1;
 
-  dbg_setup_uart();
+    leds_init();
+
+//  dbg_setup_uart();
   printf("Initialising\n");
   
   clock_init();
@@ -73,6 +72,11 @@ main()
     /* Idle! */
   }
   return 0;
+}
+
+void uip_log(char *m)
+{
+  printf("uIP: '%s'\n", m);
 }
 
 
