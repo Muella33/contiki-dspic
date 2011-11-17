@@ -4,6 +4,8 @@ CONTIKI_TARGET_MAIN = ${CONTIKI_CORE}.o
 
 CONTIKI_TARGET_SOURCEFILES += contiki-dp-webplatform-main.c leds-arch.c
 
+DEV     += leds.c
+
 CONTIKIPIC=$(CONTIKI)/cpu/dspic
 CONTIKIBOARD=.
 

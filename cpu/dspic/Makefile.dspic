@@ -3,6 +3,10 @@ CONTIKI_CPU_DIRS = .
 CONTIKI_SOURCEFILES += clock.c rtimer-arch.c watchdog.c
 CONTIKI_CPU=$(CONTIKI)/cpu/dspic
 
+# check mplab version
+MPLAB_VER := $(shell pic30-gcc -dumpversion)
+${info pic30-gcc version is '$(MPLAB_VER)' recommend 4.0.3}
+
 # grab path to MPLAB support files (cygwin, on win32 only)
 MPLABC_BINW=$(shell dirname "`which pic30-gcc`")
 MPLABC_HOMEW=$(shell dirname "$(MPLABC_BINW)")
@@ -42,7 +46,7 @@ CUSTOM_RULE_LINK=1
 	$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
 
 %.$(TARGET).hex: %.$(TARGET).out
-	$(BIN2HEX) %.$(TARGET).out -omf=elf
+	$(BIN2HEX) $^ -omf=elf
 
 %: %.$(TARGET).hex
 	@

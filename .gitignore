@@ -5,6 +5,8 @@
 *.log
 *.elf
 *.ihex
+*.hex
+*.out
 obj_*
 symbols.*
 Makefile.target
