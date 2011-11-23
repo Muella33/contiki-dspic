@@ -11,10 +11,10 @@
 //it's important to keep configuration bits that are compatible with the bootloader
 //if you change it from the internall/PLL clock, the bootloader won't run correctly
 
-_FOSCSEL(FNOSC_FRCPLL)		//INT OSC with PLL (always keep this setting)
-_FOSC(OSCIOFNC_OFF & POSCMD_NONE)	//disable external OSC (always keep this setting)
-_FWDT(FWDTEN_OFF)				//watchdog timer off
-_FICD(JTAGEN_OFF & 0b11);//JTAG debugging off, debugging on PG1 pins enabled
+_FOSCSEL(FNOSC_FRCPLL)            //INT OSC with PLL (always keep this setting)
+_FOSC(OSCIOFNC_OFF & POSCMD_NONE) //disable external OSC (always keep this setting)
+_FWDT(FWDTEN_OFF)                 //watchdog timer off
+_FICD(JTAGEN_OFF & ICS_PGD1);         //JTAG debugging off, debugging on PG1 pins enabled
 
 #define SD_TRIS                       TRISAbits.TRISA10
 #define SD_IO                         LATAbits.LATA10
@@ -34,10 +34,9 @@ int main()
 	CLKDIVbits.PLLPOST=0;// PLLPOST (N1) 0=/2
     while(!OSCCONbits.LOCK);//wait for PLL ready
 
-	//uart
+	//UART1 SETUP
 	//UART can be placed on any RPx pin
-	//we need to configure it for RP14/RP15 to use the FTDI usb->serial converter
-	//you could also output one (or both) of the two available UARTS to the I/O header
+	//configure for RP14/RP15 to use the FTDI usb->serial converter
 	//assign pin 14 to the UART1 RX input register
 	//RX PR14 (input)
 	RPINR18bits.U1RXR = 14;
@@ -53,12 +52,15 @@ int main()
     U1STA = 0;	//clear status register
     U1MODEbits.UARTEN = 1; //enable the UART RX
     IFS0bits.U1RXIF = 0;  //clear the receive flag
+    U1STAbits.UTXEN = 1;  //enable UART TX
 
-
-    leds_init();
+	// with PIC30 compiler standard library the default printf calls write, which
+	// is soft-linked to a write() function outputing to UART1
 
 //  dbg_setup_uart();
   printf("Initialising\n");
+	
+    leds_init();
   
   clock_init();
   process_init();
@@ -69,6 +71,7 @@ int main()
     do {
     } while(process_run() > 0);
     idle_count++;
+	
     /* Idle! */
   }
   return 0;

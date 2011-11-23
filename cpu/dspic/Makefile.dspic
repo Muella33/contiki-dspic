@@ -7,6 +7,14 @@ CONTIKI_CPU=$(CONTIKI)/cpu/dspic
 MPLAB_VER := $(shell pic30-gcc -dumpversion)
 ${info pic30-gcc version is '$(MPLAB_VER)' recommend 4.0.3}
 
+# check C30 support files version. linker scripts were deficient for this device before 330
+C30_VER_MIN := 330
+C30_VER := $(shell pic30-gcc --version | grep C30_VERSION | cut -c 20-)
+C30_OK := $(filter $(C30_VER_MIN),$(firstword $(sort  $(C30_VER) $(C30_VER_MIN))))
+ifndef C30_OK 
+${error C30 version is $(C30_VER) - require $(C30_VER_MIN) or above. Check PATH or upgrade}
+endif
+
 # grab path to MPLAB support files (cygwin, on win32 only)
 MPLABC_BINW=$(shell dirname "`which pic30-gcc`")
 MPLABC_HOMEW=$(shell dirname "$(MPLABC_BINW)")
@@ -50,3 +58,4 @@ CUSTOM_RULE_LINK=1
 
 %: %.$(TARGET).hex
 	@
+
