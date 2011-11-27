@@ -28,57 +28,13 @@
  *
  * This file is part of the Contiki operating system.
  *
- * $Id: leds-arch.c, $
+ * $Id: serial.c, $
  */
-
 /**
  * \file
- *         A brief description of what this file is.
+ *         Serial port setup for Web Platform
  * \author
- *         Adam Dunkels <adam@sics.se>
+ *         Chris Shucksmith <chris@shucksmith.co.uk>
  */
 
-#include <p33Fxxxx.h>
-#include "dev/leds.h"
-
-static unsigned char leds;
-
-#define latLED_SD		(LATAbits.LATA10)
-#define latLED_LD1		(LATAbits.LATA8)
-#define latLED_LD2		(LATAbits.LATA9)	
-
-void
-leds_arch_init(void)
-{
-  leds = 0;
-  // we have LD1, LD2 and SD leds to control
-
-  	TRISAbits.TRISA8 = 0;   // LD1 tristate to output
-	TRISAbits.TRISA9 = 0;   // LD2 tristate to output
-	TRISAbits.TRISA10 = 0;  // SD tristate to output
-	
-	latLED_LD1 = 0;
-	latLED_LD2 = 0;
-	latLED_SD = 1;	// SD LED on at initialisation
-}
-
-unsigned char
-leds_arch_get(void)
-{
-  return leds;
-}
-
-void
-leds_arch_set(unsigned char l)
-{
-	// Contiki maps LEDs to lowest 3 bits of l
-	// LEDS_GREEN   1  LD1
-	// LEDS_YELLOW  2  LD2
-	// LEDS_RED     4  SD
-
-	leds = l;
-	latLED_LD1 = ((l & LEDS_GREEN) == LEDS_GREEN);
-	latLED_LD2 = ((l & LEDS_YELLOW) == LEDS_YELLOW);
-	latLED_SD  = ((l & LEDS_RED) == LEDS_RED);
-	
-}
+void dbg_setup_uart(void);

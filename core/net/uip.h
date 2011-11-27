@@ -482,7 +482,11 @@ typedef union {
   uint8_t u8[UIP_BUFSIZE];
 } uip_buf_t;
 
+#if CONTIKI_CORE==contiki-dp-webplatform
+CCIF extern uip_buf_t uip_aligned_buf __attribute__((space(dma)));
+#else
 CCIF extern uip_buf_t uip_aligned_buf;
+#endif
 #define uip_buf (uip_aligned_buf.u8)
 
 

@@ -28,57 +28,41 @@
  *
  * This file is part of the Contiki operating system.
  *
- * $Id: leds-arch.c, $
+ * $Id: serial.c, $
  */
-
 /**
  * \file
- *         A brief description of what this file is.
+ *         Serial port setup for Web Platform
  * \author
- *         Adam Dunkels <adam@sics.se>
+ *         Chris Shucksmith <chris@shucksmith.co.uk>
  */
 
 #include <p33Fxxxx.h>
-#include "dev/leds.h"
 
-static unsigned char leds;
-
-#define latLED_SD		(LATAbits.LATA10)
-#define latLED_LD1		(LATAbits.LATA8)
-#define latLED_LD2		(LATAbits.LATA9)	
-
-void
-leds_arch_init(void)
+void dbg_setup_uart(void)
 {
-  leds = 0;
-  // we have LD1, LD2 and SD leds to control
 
-  	TRISAbits.TRISA8 = 0;   // LD1 tristate to output
-	TRISAbits.TRISA9 = 0;   // LD2 tristate to output
-	TRISAbits.TRISA10 = 0;  // SD tristate to output
-	
-	latLED_LD1 = 0;
-	latLED_LD2 = 0;
-	latLED_SD = 1;	// SD LED on at initialisation
-}
+	//UART1 SETUP
+	//UART can be placed on any RPx pin
+	//configure for RP14/RP15 to use the FTDI usb->serial converter
+	//assign pin 14 to the UART1 RX input register
+	//RX PR14 (input)
+	RPINR18bits.U1RXR = 14;
+	//assign UART1 TX function to the pin 15 output register
+	//TX RP15 (output)
+	RPOR7bits.RP15R = 3; // U1TX_O
 
-unsigned char
-leds_arch_get(void)
-{
-  return leds;
-}
+	//peripheral setup
+    U1BRG = 85;              //86@80mhz, 85@79.xxx=115200
+    U1MODE = 0;              //clear mode register
+    U1MODEbits.BRGH = 1;     //use high percison baud generator
+    U1STA = 0;               //clear status register
+    U1MODEbits.UARTEN = 1;   //enable the UART RX
+    IFS0bits.U1RXIF = 0;     //clear the receive flag
+    U1STAbits.UTXEN = 1;     //enable UART TX
 
-void
-leds_arch_set(unsigned char l)
-{
-	// Contiki maps LEDs to lowest 3 bits of l
-	// LEDS_GREEN   1  LD1
-	// LEDS_YELLOW  2  LD2
-	// LEDS_RED     4  SD
-
-	leds = l;
-	latLED_LD1 = ((l & LEDS_GREEN) == LEDS_GREEN);
-	latLED_LD2 = ((l & LEDS_YELLOW) == LEDS_YELLOW);
-	latLED_SD  = ((l & LEDS_RED) == LEDS_RED);
-	
+	// with PIC30 compiler standard library the default printf() calls 
+	/// write(), which is soft-linked to the library default write() function 
+	// outputing to UART1
+  
 }
