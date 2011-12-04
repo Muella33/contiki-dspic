@@ -204,6 +204,24 @@ void enc28j60PhyWrite(uint8_t address, uint16_t data)
 
 void enc28j60Init(uint8_t* mac_address )
 {
+    //custom pin assignments for our hardware
+	// ENC28J60 I/O pins
+	//mapping:
+	//A2 ETH-INT
+	//C2 MISO
+	//C1 MOSI
+	//C0 CLK
+	//B3 CS
+	//B2 RST
+	//CS and RST pins
+	//MISO1 C2/RP18 (input)
+	RPINR20bits.SDI1R = 18;			
+	//CLK1 C0/RP16 (output)
+	RPOR8bits.RP16R = 8; // SCK1OUT_O; 	
+	//MOSI1 C1/RP17 (output)
+	RPOR8bits.RP17R = 7; // SDO1_O;	
+
+
 	enc28j60DeviceInit(mac_address);
 	//Setup DMA
 	enc28j60DMAInit();
@@ -212,7 +230,7 @@ void enc28j60Init(uint8_t* mac_address )
 void enc28j60DeviceInit(uint8_t* mac_address ) {
 	uint8_t i;
 	// initialize I/O
-
+	printf(" eth device init\n");
     /* custom pin assignments for our hardware
 		are configured in HardwareProfile.h
 		and defined to generic ENC_* names
@@ -237,11 +255,12 @@ void enc28j60DeviceInit(uint8_t* mac_address ) {
 	// perform system reset
     ENC_HARDRESET();
 	enc28j60WriteOp(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);
-	
+	printf(" eth reset delay\n");
 	// ERRATA Note 2 - ESTAT.CLKRDY is not reliable for clock recovery after reset as 
 	// might not have been cleared by the reset electronics. Replace with delay of 1ms
 	clock_delay(1);
 	
+	printf(" eth reset delay end\n");
 	// check CLKRDY bit to see if reset is complete
 	do{
 		i = enc28j60Read(ESTAT);

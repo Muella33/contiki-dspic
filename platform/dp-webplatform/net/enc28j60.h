@@ -226,7 +226,7 @@
 
 
 
-#define	MAX_FRAMELEN	512	// maximum ethernet frame length; should match UIP Buffer size
+#define	MAX_FRAMELEN	1500	// maximum ethernet frame length; should match UIP Buffer size
 
 // Ethernet constants
 #define ETHERNET_MIN_PACKET_LENGTH	0x3C

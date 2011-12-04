@@ -46,7 +46,7 @@
 
 PROCESS(enc28j60_process, "ENC28J60 driver");
 
-uint8_t eth_mac_addr[6] = {0x02, 0xaa, 0xbb, 0xcc, 0xdd, 0xee};
+// uint8_t eth_mac_addr[6] = {0x02, 0xaa, 0xbb, 0xcc, 0xdd, 0xee};
 volatile uint8_t uipDMAactive = 0;
 #define cli()
 #define sei()
@@ -81,9 +81,17 @@ void enc28j60_exit(void)
  * in current configuration it reads the Ethernet driver MAC address
  * from EEPROM memory
  */
-void enc28j60_init()
+void enc28j60_init(const void *mac_addr)
 {
-	enc28j60Init(eth_mac_addr);
+    // uip_setethaddr(mac_addr)
+	uip_ethaddr.addr[0] = ((uint8_t*)mac_addr)[0];
+	uip_ethaddr.addr[1] = ((uint8_t*)mac_addr)[1];
+	uip_ethaddr.addr[2] = ((uint8_t*)mac_addr)[2];
+	uip_ethaddr.addr[3] = ((uint8_t*)mac_addr)[3];
+	uip_ethaddr.addr[4] = ((uint8_t*)mac_addr)[4];
+	uip_ethaddr.addr[5] = ((uint8_t*)mac_addr)[5];
+	
+	enc28j60Init((uint8_t*) mac_addr);
 }
 
 static void pollhandler(void) {

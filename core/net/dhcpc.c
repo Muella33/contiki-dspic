@@ -175,6 +175,10 @@ send_discover(void)
   end = add_req_options(end);
   end = add_end(end);
 
+#if UIP_CONF_LOGGING
+  printf("DHCPC: send discover\n");
+#endif
+ 
   uip_send(uip_appdata, (int)(end - (u8_t *)uip_appdata));
 }
 /*---------------------------------------------------------------------------*/
@@ -190,6 +194,11 @@ send_request(void)
   end = add_server_id(end);
   end = add_req_ipaddr(end);
   end = add_end(end);
+  
+#if UIP_CONF_LOGGING
+  printf("DHCPC: send request\n");
+#endif
+
   
   uip_send(uip_appdata, (int)(end - (u8_t *)uip_appdata));
 }
@@ -327,7 +336,7 @@ PT_THREAD(handle_dhcp(process_event_t ev, void *data))
   } while(s.state != STATE_CONFIG_RECEIVED);
   
  bound:
-#if 0
+#if UIP_CONF_LOGGING
   printf("Got IP address %d.%d.%d.%d\n", uip_ipaddr_to_quad(&s.ipaddr));
   printf("Got netmask %d.%d.%d.%d\n",	 uip_ipaddr_to_quad(&s.netmask));
   printf("Got DNS server %d.%d.%d.%d\n", uip_ipaddr_to_quad(&s.dnsaddr));

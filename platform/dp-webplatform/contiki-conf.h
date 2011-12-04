@@ -6,7 +6,12 @@
 #define CCIF
 #define CLIF
 
+#define WITH_DNS 1
 #define WITH_UIP 1
+
+#define UIP_UDP 1
+#define UIP_TCP 1
+
 #define WITH_ASCII 1
 #define WITH_PHASE_OPTIMIZATION 0
 
@@ -27,21 +32,25 @@ typedef unsigned int clock_time_t;
 typedef unsigned int uip_stats_t;
 
 /* uIP configuration */
-#define UIP_CONF_LLH_LEN 0
+#define UIP_CONF_LLH_LEN 14
 #define UIP_CONF_BROADCAST 1
 #define UIP_CONF_LOGGING 1
 #define UIP_CONF_DHCP_LIGHT 1
-#define UIP_CONF_BUFFER_SIZE     116
+#define UIP_CONF_BUFFER_SIZE     1500
 #define UIP_CONF_RECEIVE_WINDOW  (UIP_CONF_BUFFER_SIZE - 40)
+// we don't bother with the packet queue, zero the size
+#define QUEUEBUF_CONF_NUM 0
 #define UIP_CONF_MAX_CONNECTIONS 4
 #define UIP_CONF_MAX_LISTENPORTS 8
 #define UIP_CONF_UDP_CONNS       8
-#define UIP_CONF_FWCACHE_SIZE    30
+// we don't forward any packets, so zero this
+#define UIP_CONF_FWCACHE_SIZE    0
 #define UIP_CONF_BROADCAST       1
 //#define UIP_ARCH_IPCHKSUM        1
 #define UIP_CONF_UDP_CHECKSUMS   1
 #define UIP_CONF_PINGADDRCONF    0
 #define UIP_CONF_TCP_FORWARD 0
+#define  UIP_CONF_IPV6_QUEUE_PKT 0
 
 /* Prefix for relocation sections in ELF files */
 

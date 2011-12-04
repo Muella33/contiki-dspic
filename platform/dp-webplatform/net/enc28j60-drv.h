@@ -44,6 +44,6 @@ PROCESS_NAME(enc28j60_process);
 
 u8_t enc28j60_output(void);
 void enc28j60_exit(void);
-void enc28j60_init(void);
+void enc28j60_init(const void *mac_addr);
 
 #endif /* __ENC28J60_DRV_H__ */
