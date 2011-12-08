@@ -34,20 +34,16 @@
 /**
 * \file
 *			dspic Clock using RTC interrupts.
-*			here one system tick is half a second, so 
-*			ensure CLOCK_SECOND = 2
+
 * \author
 *			
 */
 /*---------------------------------------------------------------------------*/
 
 #include "sys/clock.h"
-#include "sys/etimer.h"
 #include <p33Fxxxx.h>
 
-static volatile clock_time_t count;
 static volatile unsigned long current_seconds = 0;
-static unsigned int second_countdown = CLOCK_SECOND;
 
 unsigned short year;
 unsigned short month_date;
@@ -61,24 +57,15 @@ void readRTC(void);
 
 void __attribute__ ((interrupt, auto_psv)) _RTCCInterrupt() {
 	IFS3bits.RTCIF = 0;
-    count++;
 	doRead = 1;
-	
-  if (--second_countdown == 0) {
-    current_seconds++;
-    second_countdown = CLOCK_SECOND;
-  }
-  
-  // TODO: move the etimer poll loop to a higher resolution timer than Timer0 RTC
-  if(etimer_pending()) {
-    etimer_request_poll();
-  }
+	current_seconds++;
+		
+  LATAbits.LATA10 = ~LATAbits.LATA10;
 }
 
 void clock_init(void)
 { 
 	//reset tick count
-	count = 0;
     unlockRTC();
   
     RCFGCALbits.RTCEN = 0;  // disable RTC
@@ -114,17 +101,12 @@ void clock_init(void)
 
     IEC3bits.RTCIE = 1;     // enable RTC alarm interrupt
     IPC15bits.RTCIP = 2;    // priority 2
-        
+    
     ALCFGRPTbits.ALRMEN = 1;    // enable Alarm
 
     lockRTC();
 }
-
-clock_time_t clock_time(void)
-{
-  return count;
-}
-
+ 
 /**
  * Blocking delay for a multiple of milliseconds - moved to rtimer-arch.c
  *  void clock_delay(unsigned int i) { };
@@ -138,7 +120,7 @@ unsigned long clock_seconds(void)
 void inline unlockRTC(void) {
     // Enable RTCC Timer Access
     asm ("mov #0x55,w0\nmov w0, NVMKEY\nmov #0xAA,w0\nmov w0, NVMKEY"
-         : /* no outputd */
+         : /* no outputs */
          : /* no inputs */
          : "w0" );
     RCFGCALbits.RTCWREN = 1;

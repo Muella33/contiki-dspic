@@ -18,6 +18,7 @@
 #include "contiki-net.h"
 #include <net/dhcpc.h>
 #include "apps/pdebug.h"
+#include "apps/pdhcp.h"
 
 //it's important to keep configuration bits that are compatible with the bootloader
 //if you change it from the internall/PLL clock, the bootloader won't run correctly
@@ -46,40 +47,41 @@ int main()
 	CLKDIVbits.PLLPOST=0;// PLLPOST (N1) 0=/2
     while(!OSCCONbits.LOCK);//wait for PLL ready
 
+	SRbits.IPL = 0;	// All interupt levels enabled
+		
   dbg_setup_uart();
   printf("Initialising\n");
 
   resetCheck();
   rtimer_init();
   
-  printf("leds init\n");
+  printf("leds init\n");  
   leds_init();
-  printf("clock init\n");
-  clock_init();
+
   printf("process init\n");
   process_init();
   printf("etimer init\n");
   process_start(&etimer_process, NULL);
+  printf("clock init\n");
+  clock_init();
   
-  uip_init();
   printf("eth init\n");
   enc28j60_init(eth_mac_addr);
   
   // uip_setethaddr( eaddr );
-  
   printf("eth start\n");
   process_start(&enc28j60_process, NULL);
   printf("autostart init\n");
   autostart_start(autostart_processes);
-  printf("tcpip start\n");
-  process_start(&tcpip_process, NULL);
   
-  printf("dhcp init\n");
-  dhcpc_init(eth_mac_addr, 6);
+  printf("tcpip start\n");
+  process_start(&tcpip_process, NULL);		// invokes uip_init();
   
   printf("Processes running\n");
-
+  dhcpc_init(eth_mac_addr, 6);
   process_start(&example_program_process, NULL);
+  process_start(&dhcp_process, NULL);
+
 
   
   while(1) {

@@ -44,23 +44,40 @@
 
 #include "sys/energest.h"
 #include "sys/rtimer.h"
+#include "sys/etimer.h"
 #include "rtimer-arch.h"
 #include "contiki-conf.h"
+#include "sys/clock.h"
 
-volatile unsigned long milliseconds = 0;
 volatile unsigned long rcounter = 0;
+volatile unsigned long ecounter = 0;
+static volatile clock_time_t count;	// milliseconds
 
-
-/* code for Timer2 ISR */
+/* code for Timer2 ISR - one millisecond interrupt */
 void __attribute__((__interrupt__, no_auto_psv)) _T2Interrupt(void)
 {
 	IFS0bits.T2IF = 0;  // Clear Timer1 Interrupt Flag
-	
-	milliseconds++;
-    if (rcounter == 1) rtimer_run_next();
-	if (rcounter > 0) rcounter--;
 
+	if (rcounter == 1) rtimer_run_next();
+	if (rcounter > 0) rcounter--;
+	
+
+	// for use with CLOCK_CONF_SECOND = 100
+	if (++ecounter >= 10) {
+		ecounter = 0;
+		count++;
+		
+		if(etimer_pending()) {
+			etimer_request_poll();
+		}
+	}
 }
+
+clock_time_t clock_time(void)
+{
+  return count;
+}
+
 
 void rtimer_arch_init(void) {
 
@@ -102,17 +119,20 @@ void rtimer_arch_schedule(rtimer_clock_t t) {
 	rcounter = t;
 }
 
+
+
+
 /**
  * Blocking delay for a multiple of milliseconds
  */
 void clock_delay(unsigned int i)
 {
-	unsigned long waitfor = milliseconds + i;
-	if (waitfor < milliseconds) { 
-		while (milliseconds > 1000) { }; // wait for overflow		
-		while (milliseconds < waitfor) { }; // wait for expiry
+	unsigned long waitfor = count + i;
+	if (waitfor < count) { 
+		while (count > 1000) { }; // wait for overflow		
+		while (count < waitfor) { }; // wait for expiry
 	} else {
-		while (milliseconds < waitfor) { };	// wait for expiry
+		while (count < waitfor) { };	// wait for expiry
 	}
 	
 }

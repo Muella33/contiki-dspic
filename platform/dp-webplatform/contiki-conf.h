@@ -19,8 +19,8 @@
  
 #define F_CPU 8000000
 #define RTIMER_ARCH_PRESCALER 256
-
 #define CLOCK_CONF_SECOND 100
+
 typedef uint8_t u8_t;
 typedef uint16_t u16_t;
 typedef uint32_t u32_t;

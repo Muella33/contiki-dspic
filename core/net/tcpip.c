@@ -52,7 +52,7 @@
 #include "net/uip-ds6.h"
 #endif
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -436,6 +436,8 @@ eventhandler(process_event_t ev, process_data_t data)
       {
         /* Check the clock so see if we should call the periodic uIP
            processing. */
+		PRINTF("tcpip etimer\n");
+		
         if(data == &periodic &&
            etimer_expired(&periodic)) {
 #if UIP_TCP

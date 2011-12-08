@@ -2,7 +2,7 @@ CONTIKI_TARGET_DIRS = . apps net
 CONTIKI_CORE=contiki-dp-webplatform
 CONTIKI_TARGET_MAIN = ${CONTIKI_CORE}.o
 
-WP_NET = enc28j60.c enc28j60-drv.c pdebug.c
+WP_NET = enc28j60.c enc28j60-drv.c pdebug.c pdhcp.c
 CONTIKI_TARGET_SOURCEFILES += contiki-dp-webplatform-main.c leds-arch.c serial.c reset.c $(WP_NET)
 
 DEV     += leds.c
