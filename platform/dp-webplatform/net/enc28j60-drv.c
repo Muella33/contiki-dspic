@@ -54,8 +54,8 @@ volatile uint8_t uipDMAactive = 0;
 
 u8_t enc28j60_output( void )
 {
-	PRINTF("ENC28 send: %d bytes\n",uip_len);
 	uip_arp_out();
+	PRINTF("ENC28 send: %d bytes\n",uip_len);	
 	
 	if(uip_len <= UIP_LLH_LEN + UIP_TCPIP_HLEN) {
 		// hwsend(&uip_buf[0], UIP_LLH_LEN);

@@ -35,7 +35,7 @@ typedef unsigned int uip_stats_t;
 #define UIP_CONF_LLH_LEN 14
 #define UIP_CONF_BROADCAST 1
 #define UIP_CONF_LOGGING 1
-#define UIP_CONF_DHCP_LIGHT 1
+// this breaks DHCP for me   #define UIP_CONF_DHCP_LIGHT 1
 #define UIP_CONF_BUFFER_SIZE     1500
 #define UIP_CONF_RECEIVE_WINDOW  (UIP_CONF_BUFFER_SIZE - 40)
 // we don't bother with the packet queue, zero the size

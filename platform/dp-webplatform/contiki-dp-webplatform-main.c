@@ -78,7 +78,6 @@ int main()
   process_start(&tcpip_process, NULL);		// invokes uip_init();
   
   printf("Processes running\n");
-  dhcpc_init(eth_mac_addr, 6);
   process_start(&example_program_process, NULL);
   process_start(&dhcp_process, NULL);
 

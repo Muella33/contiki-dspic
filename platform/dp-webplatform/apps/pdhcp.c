@@ -17,6 +17,7 @@
  */
 PROCESS(dhcp_process, "DHCP process");
 static struct etimer timer;
+extern uint8_t eth_mac_addr[];
 
 PROCESS_THREAD(dhcp_process, ev, data)
 {
@@ -27,7 +28,6 @@ PROCESS_THREAD(dhcp_process, ev, data)
      * We set a timer that wakes us up after 5 seconds. 
      */
 	etimer_set(&timer, 5*CLOCK_SECOND); 
-    printf("dhcp init\n");
   
   while(1) {
   
@@ -37,9 +37,12 @@ PROCESS_THREAD(dhcp_process, ev, data)
 		printf("event: PROCESS_EVENT_MSG");
     } else if(ev == tcpip_event) {
 	   printf("event: TCPIP_EVENT");
-      dhcpc_appcall(ev, data);
-    } else if(ev == PROCESS_EVENT_TIMER) {   
-      	 printf("event: dhcp request");
+       dhcpc_appcall(ev, data);
+    } else if(ev == PROCESS_EVENT_TIMER) {
+	    printf("dhcp init\n");
+	    dhcpc_init(eth_mac_addr, 6);
+
+      	printf("event: dhcp request");
 		dhcpc_request();
 	}
     
