@@ -34,15 +34,15 @@ PROCESS_THREAD(dhcp_process, ev, data)
     PROCESS_WAIT_EVENT();
     
     if(ev == PROCESS_EVENT_MSG) {
-		printf("event: PROCESS_EVENT_MSG");
+		printf("event: PROCESS_EVENT_MSG\n");
     } else if(ev == tcpip_event) {
-	   printf("event: TCPIP_EVENT");
+	   printf("event: TCPIP_EVENT\n");
        dhcpc_appcall(ev, data);
     } else if(ev == PROCESS_EVENT_TIMER) {
 	    printf("dhcp init\n");
 	    dhcpc_init(eth_mac_addr, 6);
 
-      	printf("event: dhcp request");
+      	printf("event: dhcp request\n");
 		dhcpc_request();
 	}
     

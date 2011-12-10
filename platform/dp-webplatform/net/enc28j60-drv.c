@@ -122,7 +122,6 @@ static void pollhandler(void) {
 			uip_arp_ipin();
 			uip_input();
 			if(uip_len > 0) {
-				uip_arp_out();
 				enc28j60_output();
 			}
 		} else if(BUF->type == UIP_HTONS(UIP_ETHTYPE_ARP)) {

@@ -107,7 +107,7 @@ dhcpc_configured(const struct dhcpc_state *s)
   resolv_conf(&s->dnsaddr);
 #endif /* WITH_DNS */
 
-  printf("DHCP Configured.");
+  printf("DHCP Configured\n");
   process_post(PROCESS_CURRENT(), PROCESS_EVENT_MSG, NULL);
 }
 /*-----------------------------------------------------------------------------------*/
@@ -123,7 +123,7 @@ dhcpc_unconfigured(const struct dhcpc_state *s)
   resolv_conf(&nulladdr);
 #endif /* WITH_DNS */
 
-  printf("DHCP Unconfigured.");
+  printf("DHCP Unconfigured\n");
   process_post(PROCESS_CURRENT(), PROCESS_EVENT_MSG, NULL);
 }
 
