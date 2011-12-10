@@ -117,7 +117,7 @@ static void pollhandler(void) {
 
   
 	if(uip_len > 0) {
-		PRINTF("POLLHANDLER: ENC28 receive: %d bytes %d\n",uip_len, uip_htons(BUF->type));
+		PRINTF("POLLHANDLER: ENC28 receive: %d bytes %d\n",uip_len, uip_ntohs(BUF->type));
 	    if(BUF->type == UIP_HTONS(UIP_ETHTYPE_IP)) {
 			uip_arp_ipin();
 			uip_input();
@@ -128,7 +128,8 @@ static void pollhandler(void) {
 		} else if(BUF->type == UIP_HTONS(UIP_ETHTYPE_ARP)) {
 			uip_arp_arpin();
 			if(uip_len > 0) {
-				enc28j60_output();
+				// can't use enc28j60_output() as the MAC header + sz already final
+				enc28j60PacketSend1(uip_buf, uip_len );
 			}
 		}
 	}	
