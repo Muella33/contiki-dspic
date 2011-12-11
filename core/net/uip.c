@@ -996,6 +996,16 @@ uip_process(u8_t flag)
   if(uip_ipaddr_cmp(&uip_hostaddr, &uip_all_zeroes_addr)) {
     uip_hostaddr = BUF->destipaddr;
   }
+#else
+#if UIP_PINGNOADDRESSDROP
+  if(uip_ipaddr_cmp(&uip_hostaddr, &uip_all_zeroes_addr)) {
+      UIP_LOG("ip: icmp ping dropped as IP address unconfigured");
+      goto drop;
+  } else if (! uip_ipaddr_cmp(&uip_hostaddr, &(BUF->destipaddr))) {
+	  UIP_LOG("ip: icmp ping dropped as IP mismatch");
+      goto drop;
+  }
+#endif
 #endif /* UIP_PINGADDRCONF */
 
   ICMPBUF->type = ICMP_ECHO_REPLY;

@@ -48,9 +48,12 @@ typedef unsigned int uip_stats_t;
 #define UIP_CONF_BROADCAST       1
 //#define UIP_ARCH_IPCHKSUM        1
 #define UIP_CONF_UDP_CHECKSUMS   1
+#define UIP_PINGNOADDRESSDROP 1
 #define UIP_CONF_PINGADDRCONF    0
 #define UIP_CONF_TCP_FORWARD 0
-#define  UIP_CONF_IPV6_QUEUE_PKT 0
+#define UIP_CONF_IPV6_QUEUE_PKT 0
+#define PACKETBUF_CONF_SIZE 0
+#define PACKETBUF_CONF_HDR_SIZE 0
 
 /* Prefix for relocation sections in ELF files */
 

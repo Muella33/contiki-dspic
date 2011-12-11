@@ -9,6 +9,7 @@
 #include <p33Fxxxx.h>
 #include <serial.h>
 #include <reset.h>
+#include <prandom.h>
 
 #include "net/enc28j60-drv.h"
 #include "dev/slip.h"
@@ -19,6 +20,7 @@
 #include <net/dhcpc.h>
 #include "apps/pdebug.h"
 #include "apps/pdhcp.h"
+#include "apps/ntpclient.h"
 
 //it's important to keep configuration bits that are compatible with the bootloader
 //if you change it from the internall/PLL clock, the bootloader won't run correctly
@@ -38,7 +40,6 @@ unsigned int idle_count = 0;
 int main()
 {
 
-	AD1PCFGL = 0xFFFF; //digital pins
 
 	//setup internal clock for 80MHz/40MIPS
 	//7.37/2=3.685*43=158.455/2=79.2275
@@ -53,6 +54,11 @@ int main()
   printf("Initialising\n");
 
   resetCheck();
+  randomSeed();
+  
+  // configure A2D pins back to digitial IO
+  AD1PCFGL = 0xFFFF; //digital pins
+  
   rtimer_init();
   
   printf("leds init\n");  
@@ -64,13 +70,10 @@ int main()
   process_start(&etimer_process, NULL);
   printf("clock init\n");
   clock_init();
-  
-  printf("eth init\n");
-  enc28j60_init(eth_mac_addr);
-  
-  // uip_setethaddr( eaddr );
+    
   printf("eth start\n");
   process_start(&enc28j60_process, NULL);
+  
   printf("autostart init\n");
   autostart_start(autostart_processes);
   
@@ -80,7 +83,8 @@ int main()
   printf("Processes running\n");
   process_start(&example_program_process, NULL);
   process_start(&dhcp_process, NULL);
-
+  process_start(&resolv_process, NULL);
+  process_start(&ntp_process, NULL);
 
   
   while(1) {
@@ -96,35 +100,6 @@ int main()
 void uip_log(char *m)
 {
   printf("uIP: '%s'\n", m);
-}
-void
-dhcpc_configured(const struct dhcpc_state *s)
-{
-  uip_sethostaddr(&s->ipaddr);
-  uip_setnetmask(&s->netmask);
-  uip_setdraddr(&s->default_router);
-#if WITH_DNS
-  resolv_conf(&s->dnsaddr);
-#endif /* WITH_DNS */
-
-  printf("DHCP Configured\n");
-  process_post(PROCESS_CURRENT(), PROCESS_EVENT_MSG, NULL);
-}
-/*-----------------------------------------------------------------------------------*/
-void
-dhcpc_unconfigured(const struct dhcpc_state *s)
-{
-  static uip_ipaddr_t nulladdr;
-
-  uip_sethostaddr(&nulladdr);
-  uip_setnetmask(&nulladdr);
-  uip_setdraddr(&nulladdr);
-#if WITH_DNS
-  resolv_conf(&nulladdr);
-#endif /* WITH_DNS */
-
-  printf("DHCP Unconfigured\n");
-  process_post(PROCESS_CURRENT(), PROCESS_EVENT_MSG, NULL);
 }
 
 

@@ -48,6 +48,9 @@ PROCESS(enc28j60_process, "ENC28J60 driver");
 
 // uint8_t eth_mac_addr[6] = {0x02, 0xaa, 0xbb, 0xcc, 0xdd, 0xee};
 volatile uint8_t uipDMAactive = 0;
+static struct etimer timer;  // for periodic ARP processing
+extern uint8_t eth_mac_addr[];
+
 #define cli()
 #define sei()
 #define PRINTF printf
@@ -55,7 +58,7 @@ volatile uint8_t uipDMAactive = 0;
 u8_t enc28j60_output( void )
 {
 	uip_arp_out();
-	PRINTF("ENC28 send: %d bytes\n",uip_len);	
+	//PRINTF("ENC28 send: %d bytes\n",uip_len);	
 	
 	if(uip_len <= UIP_LLH_LEN + UIP_TCPIP_HLEN) {
 		// hwsend(&uip_buf[0], UIP_LLH_LEN);
@@ -113,11 +116,10 @@ static void pollhandler(void) {
 #else
 	uip_len = enc28j60PacketReceive();
 #endif
-  	PRINTF("ENC28 recv: got %d bytes\n", uip_len);
+  	//PRINTF("ENC28 recv: got %d bytes\n", uip_len);
 
   
-	if(uip_len > 0) {
-		PRINTF("POLLHANDLER: ENC28 receive: %d bytes %d\n",uip_len, uip_ntohs(BUF->type));
+	if(uip_len > 0) {		
 	    if(BUF->type == UIP_HTONS(UIP_ETHTYPE_IP)) {
 			uip_arp_ipin();
 			uip_input();
@@ -133,29 +135,37 @@ static void pollhandler(void) {
 		}
 	}	
 	
-	// if one or more packets remain, requeue this poll handler
+	// if one or more packets remain, requeue our poll handler
 	if (enc28j60Read(EPKTCNT) > 0) {
 		process_poll(&enc28j60_process);
-	}	
+	}
 }
 
 PROCESS_THREAD(enc28j60_process, ev, data)
 {
-  PROCESS_POLLHANDLER(pollhandler());
+	PROCESS_POLLHANDLER(pollhandler());
 
-  PROCESS_BEGIN();
+	PROCESS_BEGIN();
   
-  // initialize_the_hardware();
-
-  tcpip_set_outputfunc( enc28j60_output);
-
-  process_poll(&enc28j60_process);
+	printf("eth init\n");
+	enc28j60_init(eth_mac_addr);
   
-  PROCESS_WAIT_UNTIL(ev == PROCESS_EVENT_EXIT);
+	tcpip_set_outputfunc( enc28j60_output);
+	// 10 second ARP timer
+	etimer_set(&timer, 10*CLOCK_SECOND); 
+	process_poll(&enc28j60_process);
+    
+	while(ev != PROCESS_EVENT_EXIT) {
+		PROCESS_WAIT_EVENT();
+    
+		if(ev == PROCESS_EVENT_TIMER) {
+			etimer_set(&timer, 10*CLOCK_SECOND); 
+			uip_arp_timer();
+		}
+	}
+	enc28j60_exit();
 
-  enc28j60_exit();
-
-  PROCESS_END();
+	PROCESS_END();
 }
 
 //process interrupt from ENC26j60. When fired, schedule the polling process

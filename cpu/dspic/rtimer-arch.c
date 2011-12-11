@@ -61,7 +61,8 @@ void __attribute__((__interrupt__, no_auto_psv)) _T2Interrupt(void)
 	if (rcounter == 1) rtimer_run_next();
 	if (rcounter > 0) rcounter--;
 	
-
+	
+	
 	// for use with CLOCK_CONF_SECOND = 100
 	if (++ecounter >= 10) {
 		ecounter = 0;

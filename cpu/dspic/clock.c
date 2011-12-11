@@ -33,14 +33,14 @@
 /*---------------------------------------------------------------------------*/
 /**
 * \file
-*			dspic Clock using RTC interrupts.
-
-* \author
+*	  dspic RTC clock using periodic interrupts and 32khz secondary oscillator.
+* \author   Chris Shucksmith
 *			
 */
 /*---------------------------------------------------------------------------*/
 
 #include "sys/clock.h"
+#include "ntpclient.h"
 #include <p33Fxxxx.h>
 
 static volatile unsigned long current_seconds = 0;
@@ -68,7 +68,7 @@ void clock_init(void)
 	//reset tick count
     unlockRTC();
   
-    RCFGCALbits.RTCEN = 0;  // disable RTC
+    RCFGCALbits.RTCEN = 0;  	// disable RTC
     ALCFGRPTbits.ALRMEN = 0;    // disable Alarm
 
     // set RTC write pointer to 3
@@ -161,3 +161,54 @@ void readRTC( void ) {
     wday_hour  = RTCVAL;
     min_sec    = RTCVAL;
 }
+
+void clock_set_ntptime(struct ntp_tm *time) {
+	
+	uint8_t decade;
+	uint16_t bcd;
+	
+	decade = time->year - 2000;
+
+    unlockRTC();
+  
+    RCFGCALbits.RTCEN = 0;  	// disable RTC
+    ALCFGRPTbits.ALRMEN = 0;    // disable Alarm
+
+    // set RTC write pointer to 3
+    RCFGCALbits.RTCPTR = 3;
+    
+	// Year      0x00YY
+	bcd = ((decade / 10) << 8) | (decade % 10);
+	RTCVAL = bcd;    
+    
+	// Month,Day 0xMMDD
+	bcd = 	  ((time->month / 10) << 24) 
+			| ((time->month % 10) << 16)  
+			| ((time->day / 10) << 8)  
+			|  (time->day % 10);
+	RTCVAL = bcd;    
+	
+	// Wday,Hour 0x0WHH
+	bcd =     (time->weekday << 16)  
+			| ((time->hour / 10) << 8)  
+			|  (time->hour % 10);
+	RTCVAL = bcd;
+    
+	// Min,Sec   0xMMSS
+	bcd = 	  ((time->minute / 10) << 24) 
+			| ((time->minute % 10) << 16)  
+			| ((time->second / 10) << 8)  
+			|  (time->second % 10);
+	RTCVAL = bcd;    
+	
+    RCFGCALbits.CAL = 0;    // calibration 127..0..-128
+    
+    RCFGCALbits.RTCEN = 1;      // enable RTC
+    ALCFGRPTbits.ALRMEN = 1;    // enable Alarm
+
+    lockRTC();
+}
+
+
+
+

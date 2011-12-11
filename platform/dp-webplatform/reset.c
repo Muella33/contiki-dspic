@@ -34,6 +34,7 @@ void resetCheck( void ) {
 		}
 		printf("\r\nSystem halted.");
 		g_resetcode = UNKNOWN;
+		RCON = 0;
 		// SetErrorLED();
 		while(1);
 	}

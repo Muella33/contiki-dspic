@@ -66,6 +66,7 @@
 #if UIP_UDP
 
 #include <string.h>
+#include <stdio.h>
 
 #ifndef NULL
 #define NULL (void *)0
@@ -341,11 +342,12 @@ newdata(void)
       if(ans->type == UIP_HTONS(1) &&
 	 ans->class == UIP_HTONS(1) &&
 	 ans->len == UIP_HTONS(4)) {
-	/*	printf("IP address %d.%d.%d.%d\n",
+	printf("resolv: IP address %d.%d.%d.%d\n",
 	       ans->ipaddr[0],
 	       ans->ipaddr[1],
 	       ans->ipaddr[2],
-	       ans->ipaddr[3]);*/
+	       ans->ipaddr[3]);
+	
 	/* XXX: we should really check that this IP address is the one
 	   we want. */
         for(i = 0; i < 4; i++) {
@@ -429,6 +431,10 @@ resolv_query(const char *name)
     if(nameptr->state == STATE_UNUSED) {
       break;
     }
+	if (strcmp(nameptr->name, name, sizeof(nameptr->name)) {
+	  // reuse this slot
+	  break;
+	}
     if(seqno - nameptr->seqno > lseq) {
       lseq = seqno - nameptr->seqno;
       lseqi = i;
