@@ -5,6 +5,7 @@
 #define __NTPCLIENT_H__
 
 #include "contiki.h"
+#include "contiki-net.h"
 
 PROCESS_NAME(ntp_process);
 
@@ -25,6 +26,7 @@ struct ntp_tm {
   uint8_t second;  // second within minute (0..59)
 };
 
+extern void ntpclient_conf(const uip_ipaddr_t *ntpserver);
 extern void ntpclient_init(void);
 extern void ntpclient_appcall(void);
 extern void ntp_tmtime(uint32_t sec, struct ntp_tm *tm);

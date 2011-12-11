@@ -431,7 +431,7 @@ resolv_query(const char *name)
     if(nameptr->state == STATE_UNUSED) {
       break;
     }
-	if (strcmp(nameptr->name, name, sizeof(nameptr->name)) {
+	if (strncmp(nameptr->name, name, sizeof(nameptr->name))) {
 	  // reuse this slot
 	  break;
 	}

@@ -6,7 +6,7 @@
 unsigned char seed31pmc __attribute__((persistent));
 
 void randomSeed( void ) {
-	printf("Sampling entropy from Analogue inputs... ");
+	printf("Sampling entropy from Analogue inputs...\n");
 	
 	
 }	

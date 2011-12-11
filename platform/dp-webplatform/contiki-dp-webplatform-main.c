@@ -21,6 +21,7 @@
 #include "apps/pdebug.h"
 #include "apps/pdhcp.h"
 #include "apps/ntpclient.h"
+#include "apps/webserver/webserver-nogui.h"
 
 //it's important to keep configuration bits that are compatible with the bootloader
 //if you change it from the internall/PLL clock, the bootloader won't run correctly
@@ -85,7 +86,7 @@ int main()
   process_start(&dhcp_process, NULL);
   process_start(&resolv_process, NULL);
   process_start(&ntp_process, NULL);
-
+  process_start(&webserver_nogui_process, NULL);
   
   while(1) {
     do {

@@ -1,9 +1,10 @@
-CONTIKI_TARGET_DIRS = . apps net
+CONTIKI_TARGET_DIRS = . apps net apps/webserver
 CONTIKI_CORE=contiki-dp-webplatform
 CONTIKI_TARGET_MAIN = ${CONTIKI_CORE}.o
 
 WP_NET = enc28j60.c enc28j60-drv.c pdebug.c pdhcp.c ntpclient.c prandom.c
-CONTIKI_TARGET_SOURCEFILES += contiki-dp-webplatform-main.c leds-arch.c serial.c reset.c $(WP_NET)
+WP_WEB = webserver-nogui.c httpd.c http-strings.c  httpd-fs.c httpd-cgi.c
+CONTIKI_TARGET_SOURCEFILES += contiki-dp-webplatform-main.c leds-arch.c serial.c reset.c $(WP_NET) $(WP_WEB)
 
 DEV     += leds.c
 
