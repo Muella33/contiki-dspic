@@ -342,12 +342,14 @@ newdata(void)
       if(ans->type == UIP_HTONS(1) &&
 	 ans->class == UIP_HTONS(1) &&
 	 ans->len == UIP_HTONS(4)) {
-	printf("resolv: IP address %d.%d.%d.%d\n",
+#if UIP_CONF_LOGGING
+	printf("resolv: %s to IP address %d.%d.%d.%d\n",
+	       namemapptr->name,
 	       ans->ipaddr[0],
 	       ans->ipaddr[1],
 	       ans->ipaddr[2],
 	       ans->ipaddr[3]);
-	
+#endif
 	/* XXX: we should really check that this IP address is the one
 	   we want. */
         for(i = 0; i < 4; i++) {

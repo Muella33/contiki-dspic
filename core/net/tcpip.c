@@ -436,8 +436,6 @@ eventhandler(process_event_t ev, process_data_t data)
       {
         /* Check the clock so see if we should call the periodic uIP
            processing. */
-		PRINTF("tcpip etimer\n");
-		
         if(data == &periodic &&
            etimer_expired(&periodic)) {
 #if UIP_TCP
