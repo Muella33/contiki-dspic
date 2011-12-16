@@ -122,7 +122,7 @@ static void pollhandler(void) {
 	if(uip_len > 0) {		
 	    if(BUF->type == UIP_HTONS(UIP_ETHTYPE_IP)) {
 			uip_arp_ipin();
-			uip_input();
+			tcpip_input();
 			if(uip_len > 0) {
 				enc28j60_output();
 			}
