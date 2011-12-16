@@ -225,22 +225,16 @@ PT_THREAD(handle_output(struct httpd_state *s))
   if(!httpd_fs_open(s->filename, &s->file)) {
     strcpy(s->filename, http_404_html);
     httpd_fs_open(s->filename, &s->file);
-    PT_WAIT_THREAD(&s->outputpt,
-		   send_headers(s,
-		   http_header_404));
-    PT_WAIT_THREAD(&s->outputpt,
-		   send_file(s));
+    PT_WAIT_THREAD(&s->outputpt, send_headers(s,http_header_404));
+    PT_WAIT_THREAD(&s->outputpt, send_file(s));
   } else {
-    PT_WAIT_THREAD(&s->outputpt,
-		   send_headers(s,
-		   http_header_200));
+    PT_WAIT_THREAD(&s->outputpt, send_headers(s,http_header_200));
     ptr = strrchr(s->filename, ISO_period);
     if(ptr != NULL && strncmp(ptr, http_shtml, 6) == 0) {
       PT_INIT(&s->scriptpt);
       PT_WAIT_THREAD(&s->outputpt, handle_script(s));
     } else {
-      PT_WAIT_THREAD(&s->outputpt,
-		     send_file(s));
+      PT_WAIT_THREAD(&s->outputpt, send_file(s));
     }
   }
   PSOCK_CLOSE(&s->sout);
@@ -317,7 +311,6 @@ httpd_appcall(void *state)
     PSOCK_INIT(&s->sout, (uint8_t *)s->inputbuf, sizeof(s->inputbuf) - 1);
     PT_INIT(&s->outputpt);
     s->state = STATE_WAITING;
-    /*    timer_set(&s->timer, CLOCK_SECOND * 100);*/
     s->timer = 0;
     handle_connection(s);
   } else if(s != NULL) {

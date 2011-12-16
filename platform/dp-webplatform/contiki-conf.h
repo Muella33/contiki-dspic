@@ -40,7 +40,7 @@ typedef unsigned int uip_stats_t;
 #define UIP_CONF_RECEIVE_WINDOW  (UIP_CONF_BUFFER_SIZE - 40)
 // we don't bother with the packet queue, zero the size
 #define QUEUEBUF_CONF_NUM 0
-#define UIP_CONF_MAX_CONNECTIONS 4
+#define UIP_CONF_MAX_CONNECTIONS 8
 #define UIP_CONF_MAX_LISTENPORTS 8
 #define UIP_CONF_UDP_CONNS       8
 // we don't forward any packets, so zero this
