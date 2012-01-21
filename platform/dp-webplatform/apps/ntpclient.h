@@ -9,6 +9,9 @@
 
 PROCESS_NAME(ntp_process);
 
+//event broadcast when RTC is updated
+CCIF extern process_event_t ntpclient_event_updated; 
+
 struct ntp_time {
   uint32_t seconds;   // full seconds since 1900
   uint16_t fraction;  // fractions of a second in x/65536

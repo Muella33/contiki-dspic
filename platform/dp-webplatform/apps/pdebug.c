@@ -7,20 +7,22 @@
 
 #include "contiki.h"
 #include "contiki-net.h"
-
+#include "pdebug.h"
 #include <stdint.h>
 #include <stdio.h>
 
 /*
  * All Contiki programs must have a process, and we declare it here.
  */
-PROCESS(example_program_process, "Example process");
+PROCESS(announce_process, "UDP Announcer");
 
 /*
  * To make the program send a packet once every second, we use an
  * event timer (etimer).
  */
 static struct etimer timer;
+extern uint8_t eth_mac_addr[];
+extern const char* version;
 
 /*---------------------------------------------------------------------------*/
 /*
@@ -28,67 +30,50 @@ static struct etimer timer;
  * occurs, and the parameters "ev" and "data" will we set to the event
  * type and any data that may be passed along with the event.
  */
-PROCESS_THREAD(example_program_process, ev, data)
+PROCESS_THREAD(announce_process, ev, data)
 {
-  /*
-   * Declare the UDP connection. Note that this *MUST* be declared
-   * static, or otherwise the contents may be destroyed. The reason
-   * for this is that the process runs as a protothread, and
-   * protothreads do not support stack variables.
-   */
   static struct uip_udp_conn *c;
+  unsigned short sz = 0;
+  uip_ipaddr_t addr;
   
-  /*
-   * A process thread starts with PROCESS_BEGIN() and ends with
-   * PROCESS_END().
-   */  
   PROCESS_BEGIN();
-
-  /*
-   * We create the UDP connection to port 4321. We don't want to
-   * attach any special data to the connection, so we pass it a NULL
-   * parameter.
-   */
-   c = udp_broadcast_new(UIP_HTONS(4321), NULL);
+  c = udp_broadcast_new(UIP_HTONS(4321), NULL);
   
-  /*
-   * Loop for ever.
-   */
+   while(1) {
 
-	 
-  while(1) {
-
-    /*
-     * We set a timer that wakes us up once every second. 
-     */
-    etimer_set(&timer, CLOCK_SECOND);
+    
+    // wake up periodically every second. 
+    
+    etimer_set(&timer, 4*CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
 
     /*
-     * Now, this is a the tricky bit: in order for us to send a UDP
-     * packet, we must call upon the uIP TCP/IP stack process to call
-     * us. (uIP works under the Hollywood principle: "Don't call us,
-     * we'll call you".) We use the function tcpip_poll_udp() to tell
-     * uIP to call us, and then we wait for the uIP event to come.
+     * To send a UDP packet request the uIP TCP/IP stack process call
+     * us back with the buffer
      */
     tcpip_poll_udp(c);
     PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
 
-    /*
-     * We can now send our packet.
-     */
-    uip_send("Hello", 5);
+	uip_gethostaddr(&addr);
+	// str = makebyte(addr->u8[0], str);
+	
+    // send our packet.
+	sz = snprintf((char *)uip_appdata, uip_mss() - sz,
+         "HELLO %s ETH %02x:%02x:%02x:%02x:%02x:%02x IP %d.%d.%d.%d RTC ",
+         version,
+         eth_mac_addr[0], eth_mac_addr[1], eth_mac_addr[2], 
+         eth_mac_addr[3], eth_mac_addr[4], eth_mac_addr[5], 
+		addr.u8[0],
+		addr.u8[1],
+		addr.u8[2],
+		addr.u8[3]);
+	sz += printRTCTime((char*) uip_appdata+sz );
+	sz += snprintf((char *)uip_appdata+sz, uip_mss() - sz, "\n" );
+	
+    uip_send(uip_appdata, sz);
 
-    /*
-     * We're done now, so we'll just loop again.
-     */
   }
 
-  /*
-   * The process ends here. Even though our program sits is a while(1)
-   * loop, we must put the PROCESS_END() at the end of the process, or
-   * else the program won't compile.
-   */
   PROCESS_END();
 }
 

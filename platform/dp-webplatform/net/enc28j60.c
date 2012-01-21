@@ -637,7 +637,7 @@ void enc28j60RegDump(void)
 
 void enc28j60DMAInit(void)
 {
-	printf("NIC DMA Init");
+	printf("enc28j60DMAInit\n");
 
 	ENC_DMAPAD = ENC_DMA_PADVAL; //perhipheral address
 	ENC_DMAREQbits.IRQSEL = ENC_DMA_IRQSELVAL; //peripheral irq assignment

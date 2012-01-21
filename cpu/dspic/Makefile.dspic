@@ -1,5 +1,11 @@
-CONTIKI_CPU_DIRS = . dev
+#
+# Makefile for dsPIC
+# @author Chris Shucksmith <chris@shucksmith.co.uk>
+#
+# $Id: $
+#
 
+CONTIKI_CPU_DIRS = . dev
 CONTIKI_SOURCEFILES += clock.c rtimer-arch.c watchdog.c
 CONTIKI_CPU=$(CONTIKI)/cpu/dspic
 

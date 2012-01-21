@@ -42,6 +42,8 @@
 #include "sys/clock.h"
 #include "ntpclient.h"
 #include <p33Fxxxx.h>
+#include <stdio.h>
+#include <string.h>
 
 static volatile unsigned long current_seconds = 0;
 
@@ -133,17 +135,17 @@ void inline lockRTC(void){
 
 //   RTC functions
 unsigned short rtcGetWeekMins( void ) {
-    // rolls over Sunday->Monday at 00:00
+    // rolls over Sat->Sunday at 00:00
     unsigned short ans = 0;
     readRTC();
     //  10,800 minutes per week
     // 604,800 seconds per week
     // unsigned short 0 - 65,535
-    ans = ((wday_hour >> 8) & 0x0f)   * 24*60;  // day in minutes 24*60
-    ans += ((wday_hour >>  4) & 0x0f) * 10*60;  // hour tens 0-2
-    ans += ((wday_hour >>  0) & 0x0f) * 60;     // hour units 0-9
-    ans += ((min_sec >> 12) & 0x0f) * 10;       // minute tens 0-5
-    ans += ((min_sec >>  8) & 0x0f) * 1;        // minute units 0-9
+    ans = ((wday_hour  >>  8) & 0x0f) * 0x2400;  // day in minutes 24*60
+    ans += ((wday_hour >>  4) & 0x0f) * 0x1000;  // hour tens 0-2
+    ans += ((wday_hour >>  0) & 0x0f) * 0x100;   // hour units 0-9
+    ans += ((min_sec   >> 12) & 0x0f) * 0x10;    // minute tens 0-5
+    ans += ((min_sec   >>  8) & 0x0f) * 0x1;     // minute units 0-9
     return ans;
 }
 
@@ -162,10 +164,40 @@ void readRTC( void ) {
     min_sec    = RTCVAL;
 }
 
-void clock_set_ntptime(struct ntp_tm *time) {
+unsigned char printRTCTime(char* sbuf) {
+	unsigned char sz = 24;
 	
+	readRTC();
+    memcpy(sbuf, "20##-##-## ##:##:## (##)", sz); // include trailing null
+    // pack the bcd data in
+    sbuf[2] = ((year >> 4) & 0x0f) + '0';
+    sbuf[3] = ((year >> 0) & 0x0f) + '0';
+    // -
+    sbuf[5] = ((month_date >> 12) & 0x0f) + '0';
+    sbuf[6] = ((month_date >>  8) & 0x0f) + '0';
+    // -
+    sbuf[8] = ((month_date >>  4) & 0x0f) + '0';
+    sbuf[9] = ((month_date >>  0) & 0x0f) + '0';
+    // ' '
+    sbuf[11] = ((wday_hour >>  4) & 0x0f) + '0';
+    sbuf[12] = ((wday_hour >>  0) & 0x0f) + '0';
+    // :
+    sbuf[14] = ((min_sec >> 12) & 0x0f) + '0';
+    sbuf[15] = ((min_sec >>  8) & 0x0f) + '0';
+    // :
+    sbuf[17] = ((min_sec >>  4) & 0x0f) + '0';
+    sbuf[18] = ((min_sec >>  0) & 0x0f) + '0';
+
+    sbuf[21] = "SMTWTFS"[(wday_hour >> 8) & 0x0f];
+    sbuf[22] = "uouehra"[(wday_hour >> 8) & 0x0f];
+	
+	return sz;
+}
+
+void clock_set_ntptime(struct ntp_tm *time) {
 	uint8_t decade;
 	uint16_t bcd;
+	char* sbuf = (char*)uip_appdata;	
 	
 	decade = time->year - 2000;
 
@@ -178,27 +210,28 @@ void clock_set_ntptime(struct ntp_tm *time) {
     RCFGCALbits.RTCPTR = 3;
     
 	// Year      0x00YY
-	bcd = ((decade / 10) << 8) | (decade % 10);
+	bcd =     ((decade / 10) << 4) 
+			| ((decade % 10) << 0);
 	RTCVAL = bcd;    
     
 	// Month,Day 0xMMDD
-	bcd = 	  ((time->month / 10) << 24) 
-			| ((time->month % 10) << 16)  
-			| ((time->day / 10) << 8)  
-			|  (time->day % 10);
+	bcd = 	  ((time->month / 10) << 12) 
+			| ((time->month % 10) << 8)  
+			| ((time->day / 10)   << 4)  
+			|  (time->day % 10)   << 0;
 	RTCVAL = bcd;    
 	
 	// Wday,Hour 0x0WHH
-	bcd =     (time->weekday << 16)  
-			| ((time->hour / 10) << 8)  
-			|  (time->hour % 10);
+	bcd =     (time->weekday     << 8)  
+			| ((time->hour / 10) << 4)  
+			|  (time->hour % 10) << 0;
 	RTCVAL = bcd;
     
 	// Min,Sec   0xMMSS
-	bcd = 	  ((time->minute / 10) << 24) 
-			| ((time->minute % 10) << 16)  
-			| ((time->second / 10) << 8)  
-			|  (time->second % 10);
+	bcd = 	  ((time->minute / 10) << 12) 
+			| ((time->minute % 10) << 8)  
+			| ((time->second / 10) << 4)  
+			|  (time->second % 10) << 0;
 	RTCVAL = bcd;    
 	
     RCFGCALbits.CAL = 0;    // calibration 127..0..-128
@@ -207,6 +240,8 @@ void clock_set_ntptime(struct ntp_tm *time) {
     ALCFGRPTbits.ALRMEN = 1;    // enable Alarm
 
     lockRTC();
+	printRTCTime(sbuf);
+	printf("%s\n", sbuf);
 }
 
 

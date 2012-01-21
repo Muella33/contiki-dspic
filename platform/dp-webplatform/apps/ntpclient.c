@@ -121,6 +121,8 @@ void ntpclient_conf(const uip_ipaddr_t *ntpserver)
   process_post(&ntp_process, EVENT_NEW_SERVER, &server);
 }
 
+process_event_t ntpclient_event_updated;
+
 PROCESS_THREAD(ntp_process, ev, data)
 {
   // uip_ipaddr_t * addr;
@@ -128,7 +130,8 @@ PROCESS_THREAD(ntp_process, ev, data)
   static u8_t i;
   
   PROCESS_BEGIN();
-
+  ntpclient_event_updated = process_alloc_event();
+  
     for(i = 0; i < NTP_ENTRIES; ++i) {
 		ntpservers[i].state = STATE_UNUSED;
 	}	
@@ -364,6 +367,10 @@ static void newdata(void)
 		
 		printf("NTP: setting hw time\n");
 		clock_set_ntptime(&tm);
+		
+		// send time-updated message
+		process_post(PROCESS_BROADCAST, ntpclient_event_updated, NULL);
+
 	}
 	
 	//printf("ntpclient: newdata (completed)\n");
