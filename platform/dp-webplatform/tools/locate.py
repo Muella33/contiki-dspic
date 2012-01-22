@@ -2,52 +2,96 @@
 # -*- coding: iso-8859-1 -*-
 
 import Tkinter, tkFileDialog
+from itertools import izip
+import socket
+import Queue, threading
 from tkMessageBox import *
 
+## http://stackoverflow.com/questions/5389507/iterating-over-every-two-elements-in-a-list
+def pairwise(iterable):    
+	a = iter(iterable)
+	return izip(a, a)
+
 class simpleapp_tk(Tkinter.Tk):
-    def __init__(self,parent):
+    def __init__(self,parent,port=4321):
         Tkinter.Tk.__init__(self,parent)
         self.parent = parent
+        self.msgqueue = Queue.Queue()
+        self.webnodes = dict()
+        self.port = port
+        self.recv = udp_listen(port, self.msgqueue)        
         self.initialize()
-
+		
     def initialize(self):
         self.grid()
+        self.minsize(600,250)
+		
+        listbox = Tkinter.Listbox(self, font=('Lucida Console', 9) )
+        listbox.grid(column=0,row=1,sticky='NSEW')
+        listbox.insert(Tkinter.END, 'Searching for devices...')
+        self.listbox = listbox
+		
+        # button = Tkinter.Button(self,text=u"Click me !", command=self.OnButtonClick)
+        # button.grid(column=1,row=0)
 
-        self.entryVariable = Tkinter.StringVar()
-        self.entry = Tkinter.Entry(self,textvariable=self.entryVariable)
-        self.entry.grid(column=0,row=0,sticky='EW')
-        self.entry.bind("<Return>", self.OnPressEnter)
-        self.entryVariable.set(u"Enter text here.")
-
-        button = Tkinter.Button(self,text=u"Click me !",
-                                command=self.OnButtonClick)
-        button.grid(column=1,row=0)
-
+        label1 = Tkinter.Label(self,text=("Listening to UDP port %d" % (self.port)), anchor="w")
+        label1.grid(column=0,row=0,columnspan=1,sticky='EW')
+        
         self.labelVariable = Tkinter.StringVar()
-        label = Tkinter.Label(self,textvariable=self.labelVariable,
-                              anchor="w",fg="white",bg="blue")
-        label.grid(column=0,row=1,columnspan=2,sticky='EW')
-        self.labelVariable.set(u"Hello !")
+        label = Tkinter.Label(self,textvariable=self.labelVariable, anchor="w")
+        label.grid(column=0,row=2,columnspan=1,sticky='EW')
+        self.labelVariable.set(u"Found 0 devices")
 
         self.grid_columnconfigure(0,weight=1)
-        self.resizable(True,False)
+        self.grid_rowconfigure(1,weight=1)
+        self.resizable(True,True)
         self.update()
         self.geometry(self.geometry())       
-        self.entry.focus_set()
-        self.entry.selection_range(0, Tkinter.END)
+        
+        self.timertask = self.after(100, self.pollQueue)
 
-    def OnButtonClick(self):
-        s = tkFileDialog.askdirectory()
-        self.labelVariable.set( self.entryVariable.get()+" (You clicked the button) "+s )
-        self.entry.focus_set()
-        self.entry.selection_range(0, Tkinter.END)	
+    def pollQueue(self):
+        self.timertask = self.after(100, self.pollQueue)
 		
-    def OnPressEnter(self,event):
-        self.labelVariable.set( self.entryVariable.get()+" (You pressed ENTER)" )
-        self.entry.focus_set()
-        self.entry.selection_range(0, Tkinter.END)
+        while self.msgqueue.qsize():
+            try:
+                msg = self.msgqueue.get(0)
+                print 'GUI thread recieved ' + str(msg)
+                ## merge/store node entries by MAC
+                self.webnodes[ msg['ETH'] ] = msg
+                
+                self.listbox.delete(0, Tkinter.END)
+                self.listbox.insert(0, "MAC               IP             RTC                  FIRMWARE " )
+                for k,v in self.webnodes.items():
+					self.listbox.insert(Tkinter.END, "%-16s %-14s %-20s %s" % (v['ETH'], v['IP'], v['RTC'], v['HELLO'] ) )
+				
+                self.labelVariable.set(u"Found %d devices" % (len(self.webnodes)) )
+				
+            except Queue.Empty:
+                pass		
+
+class udp_listen():
+    def __init__(self,port,queue,buffersize=1024):
+        self.queue = queue
+        self.buffersize = buffersize
+		
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind(('', port))
+        self.sock.setblocking(1)
+		
+        self.thread = threading.Thread(target=self.run)
+        self.thread.setDaemon(1)
+        self.thread.start()
+        
+    def run(self):		
+        while (True):            
+            buf,addr = self.sock.recvfrom(self.buffersize)
+            print 'Got UDP packet: ' + str(buf).strip()
+            data = dict(pairwise(buf.split()))
+            self.queue.put(data);
 
 if __name__ == "__main__":
     app = simpleapp_tk(None)
-    app.title('my application')
+    app.title('DP Webplatform announce listener')
     app.mainloop()
+    

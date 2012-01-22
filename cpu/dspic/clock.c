@@ -165,10 +165,9 @@ void readRTC( void ) {
 }
 
 unsigned char printRTCTime(char* sbuf) {
-	unsigned char sz = 24;
-	
+	// format RTC to ISO8601 in supplied buffer	
 	readRTC();
-    memcpy(sbuf, "20##-##-## ##:##:## (##)", sz); // include trailing null
+	strcpy(sbuf, "20##-##-##T##:##:##Z");
     // pack the bcd data in
     sbuf[2] = ((year >> 4) & 0x0f) + '0';
     sbuf[3] = ((year >> 0) & 0x0f) + '0';
@@ -188,10 +187,10 @@ unsigned char printRTCTime(char* sbuf) {
     sbuf[17] = ((min_sec >>  4) & 0x0f) + '0';
     sbuf[18] = ((min_sec >>  0) & 0x0f) + '0';
 
-    sbuf[21] = "SMTWTFS"[(wday_hour >> 8) & 0x0f];
-    sbuf[22] = "uouehra"[(wday_hour >> 8) & 0x0f];
+    // sbuf[21] = "SMTWTFS"[(wday_hour >> 8) & 0x0f];
+    // sbuf[22] = "uouehra"[(wday_hour >> 8) & 0x0f];
 	
-	return sz;
+	return strlen(sbuf);
 }
 
 void clock_set_ntptime(struct ntp_tm *time) {
