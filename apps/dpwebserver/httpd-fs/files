@@ -1,0 +1,7 @@
+%!: /header
+<h2>File statistics</h2>
+<table width="100%">
+<tr><th>URI</th><th>length</th><th>counter</th><th>flags</th></tr>
+%! files
+</table>
+%!: /footer.html

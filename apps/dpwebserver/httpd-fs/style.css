@@ -1,0 +1,38 @@
+body { margin: 20px; font-family: sans-serif; background: #fff;}
+h1 { font-size: 140%; font-weight:normal; color: #036; border-bottom: 1px solid #ccc; }
+canvas { border: 0px; float: left; margin: 10px; }
+pre { float:left; display:block; background: rgb(238,238,238); border: 1px dashed #666; padding: 15px; margin: 0; }
+#menu {
+font-weight: bold;
+margin: 20px 0;
+padding: 0;
+list-style-type: none;
+background-color: #eee;
+height: 40px;
+border-top: 2px solid #eee;
+border-bottom: 2px solid #ccc;
+}
+#menu li {
+float: left;
+margin: 0;				
+}
+#menu li a {
+text-decoration: none;
+display: block;
+padding: 0 20px;
+line-height: 40px;				
+}
+#menu li a:hover, #menu li.active a {
+background-color: #f5f5f5;
+border-bottom: 2px solid #DDD;
+color: #999;
+}			
+#menu_wrapper ul {
+margin-left: 12px;
+border-top: 2px solid #d15600;
+border-bottom: 2px solid #B44500;
+background: #d15600;}
+#menu_wrapper {padding: 0 16px 0 0; background: url(orange.png) no-repeat right;}
+#menu_wrapper div {float: left; height: 44px; width: 12px; background: url(orange.png) no-repeat left;}
+#menu_wrapper a {color: #fff;}
+#menu_wrapper li a:hover, #menu_wrapper li.active a {color: #FA9B5B; background: #B44500; border-bottom: 2px solid #d15600;}

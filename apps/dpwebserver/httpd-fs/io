@@ -1,0 +1,6 @@
+%!: /header
+<h2>IO</h2>
+<table width="100%">
+<tr><th>Pin</th><th>#RP</th><th>Function</th></tr>
+</table>
+%!: /footer.html

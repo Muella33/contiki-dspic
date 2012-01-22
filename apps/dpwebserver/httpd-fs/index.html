@@ -1,0 +1,28 @@
+%!: /header
+
+<h2>This is a prototype</h2>
+
+<canvas id="t" width="160" height="160"></canvas>
+<pre>Firmware: ${ver}
+Uptime:   ${up            }
+MAC:      ${mac       }
+IP:       ${ip        }
+Gateway:  ${gw        }
+DNS:      ${dns       }
+NTP:      ${ntp       }
+RTC:      ${rtc                              }
+Webpack:  ${wp                        }</pre>
+<div style="clear:both;">
+<script type="text/javascript">
+function ds(){ var e = document.getElementById('t');
+if (e.getContext){
+  var c = e.getContext('2d');
+  c.beginPath(); c.strokeStyle = "#747574";
+  c.lineWidth = 16; c.lineCap = 'round'; c.lineJoin='round';
+  c.moveTo(10,140); c.lineTo(80,10);c.lineTo(150,140);c.lineTo(10,140);c.stroke();
+  c.lineWidth = 10;
+  c.moveTo(80,60);c.lineTo(80,100);c.moveTo(80,120);c.lineTo(80,121);c.stroke();
+}}
+window.onload = function(){ds();};
+</script>
+%!: /footer.html

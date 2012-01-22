@@ -1,0 +1,6 @@
+%!: /header
+<h2>Log</h2>
+<pre>
+%! log
+</pre>
+%!: /footer.html

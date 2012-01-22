@@ -1,0 +1,18 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head><title>Dangerous Prototypes Web Platform</title>
+<link rel="stylesheet" type="text/css" href="/style.css">  
+</head>
+<body>
+<h1>Dangerous Prototypes Web Platform</h1>
+<div id="menu_wrapper">
+ <div class="left"></div>
+ <ul id="menu">
+ <li><a href="/">Status</a></li>
+ <li><a href="/io">IO Ports</a></li>
+ <li><a href="/files">Files</a></li>
+ <li><a href="/tcp">Network</a></li>
+ <li><a href="/processes">System</a></li>
+ <li><a href="/log">Log</a></li>
+ </ul>
+ </div>
+ <div class="content">
