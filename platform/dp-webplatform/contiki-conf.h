@@ -6,6 +6,7 @@
 #define CCIF
 #define CLIF
 
+#define TELNETD_CONF_NUMLINES 10
 #define WITH_DNS 1
 #define WITH_UIP 1
 #define UIP_UDP 1
@@ -55,6 +56,13 @@ typedef unsigned int uip_stats_t;
 
 // we don't bother with the packet queue, zero the size
 #define QUEUEBUF_CONF_NUM        0
+#define PACKETBUF_CONF_SIZE      0
+#define PACKETBUF_CONF_HDR_SIZE  0
+
+// don't forward serial-line events to processess, we'll 
+// poll the hardware directly
+#define SERIAL_LINE_CONF_BUFSIZE 0
+
 #define UIP_CONF_MAX_CONNECTIONS 8
 #define UIP_CONF_MAX_LISTENPORTS 8
 #define UIP_CONF_UDP_CONNS       8
@@ -67,10 +75,8 @@ typedef unsigned int uip_stats_t;
 #define UIP_CONF_PINGADDRCONF    0
 #define UIP_CONF_TCP_FORWARD     0
 #define UIP_CONF_IPV6_QUEUE_PKT  0
-#define PACKETBUF_CONF_SIZE      0
-#define PACKETBUF_CONF_HDR_SIZE  0
+
 
 /* Prefix for relocation sections in ELF files */
 
-#define RAND_MAX 0x7fff
 #endif /* __CONTIKI_CONF_H__DPWEBPLATFORM__ */
