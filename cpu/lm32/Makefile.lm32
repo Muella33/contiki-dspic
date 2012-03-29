@@ -1,0 +1,38 @@
+#
+# Makefile for lm32
+# @author Chris Shucksmith <chris@shucksmith.co.uk>
+#
+
+CONTIKI_CPU_DIRS = . dev
+CONTIKI_SOURCEFILES += clock.c rtimer-arch.c watchdog.c
+CONTIKI_CPU=$(CONTIKI)/cpu/lm32
+
+# grab path to lm32 toolchain (cygwin, on win32 only)
+# MICO32_GTOOLS_BIN=/cygdrive/d/lscc/diamond/1.4/diamond/1.4/micosystem/gtools/lm32/bin
+# MICO32_GTOOLS_LIB=/cygdrive/d/lscc/diamond/1.4/diamond/1.4/micosystem/gtools/lm32/lib
+
+### Compiler definitions
+CC       = lm32-elf-gcc -omf=elf
+LD       = lm32-elf-gcc -omf=elf 
+AS       = lm32-elf-gcc
+AR       = lm32-elf-gcc
+OBJCOPY  = lm32-elf-gcc
+STRIP    = lm32-elf-gcc
+
+CFLAGSNO = -c -Wall -I$(CONTIKI)/platform/$(TARGET) \
+             -I$(CONTIKI)/core -I$(CONTIKI_CPU) -ffunction-sections
+CFLAGS  += $(CFLAGSNO)
+LDFLAGS = -Wl,--gc-sections,-Map=contiki-$(TARGET).map,-Tp33FJ128GP204.gld,--report-mem,--heap=128
+
+#CUSTOM_RULE_ALLOBJS_TO_TARGETLIB=1
+#CUSTOM_RULE_LINK=1
+
+.PRECIOUS: %.$(TARGET).hex %.$(TARGET).elf %.$(TARGET).out 
+
+## rewrite end taget:  .hex <--bin2hex-- .out  <--linker--  *.co 
+#%.$(TARGET).out: %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_OBJECTFILES)
+#	$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
+#
+#%: %.$(TARGET).out
+#	@
+

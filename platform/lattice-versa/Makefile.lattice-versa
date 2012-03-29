@@ -1,0 +1,19 @@
+CONTIKI_TARGET_DIRS = . apps net
+CONTIKI_CORE=contiki-lattice-versa
+CONTIKI_TARGET_MAIN = ${CONTIKI_CORE}.o
+
+WP_NET = pdebug.c pdhcp.c ntpclient.c prandom.c eeprom.c rand31-park-miller-carta-int.c
+CONTIKI_TARGET_SOURCEFILES += contiki-dp-webplatform-main.c leds-arch.c serial.c reset.c $(WP_NET)
+
+DEV     += leds.c
+
+CONTIKILM32=$(CONTIKI)/cpu/lm32
+CONTIKIBOARD=.
+
+CONTIKI_NO_NET=1
+
+CONTIKI_PLAT_DEFS=
+
+CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
+
+include $(CONTIKILM32)/Makefile.lm32
