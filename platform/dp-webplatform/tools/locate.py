@@ -4,6 +4,7 @@
 import Tkinter, tkFileDialog
 from itertools import izip
 import socket
+import os
 import Queue, threading
 from tkMessageBox import *
 
@@ -19,7 +20,12 @@ class simpleapp_tk(Tkinter.Tk):
         self.msgqueue = Queue.Queue()
         self.webnodes = dict()
         self.port = port
-        self.recv = udp_listen(port, self.msgqueue)        
+        self.recv = udp_listen(port, self.msgqueue)
+        try:
+            scriptdir = os.path.dirname(os.path.abspath(__file__))
+            self.iconbitmap(os.path.join(scriptdir, 'dp-favicon.ico'))
+        except:
+            print 'failed to set icon'
         self.initialize()
 		
     def initialize(self):
@@ -76,6 +82,12 @@ class udp_listen():
         self.buffersize = buffersize
 		
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # allow multiple instances of the GUI to 'share' listening on UDP port 
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:            
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        except AttributeError:
+            pass  # only required SO_REUSEPORT supported only on some platforms
         self.sock.bind(('', port))
         self.sock.setblocking(1)
 		
