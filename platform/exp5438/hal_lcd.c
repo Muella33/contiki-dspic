@@ -35,11 +35,6 @@
  ******************************************************************************/
 
 #include "contiki-conf.h"
-#ifdef __IAR_SYSTEMS_ICC__
-#include <msp430.h>
-#else
-#include <io.h>
-#endif
 
 #include "hal_MSP-EXP430F5438.h"
 #include "hal_lcd_fonts.h"
@@ -386,7 +381,12 @@ void halLcdActive(void)
 
     // Wait a minimum of 25ms after issuing "start oscillation"
     // command (to accomodate for MCLK up to 25MHz)
-    __delay_cycles(250000);
+    {
+      int i;
+      for(i = 0; i < 5; ++i) {
+	__delay_cycles(50000);
+      }
+    }
 
     LcdInitMacro[3 * 6 + 5] |= BIT3;
     LcdInitMacro[3 * 6 + 5] &= ~BIT0;

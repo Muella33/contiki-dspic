@@ -40,7 +40,7 @@
 #include "dev/uart0.h"
 #include "dev/watchdog.h"
 #include "lib/ringbuf.h"
-#include "dev/leds.h"
+#include "isr_compat.h"
 
 static int (*uart0_input_handler)(unsigned char c);
 
@@ -138,19 +138,11 @@ uart0_init(unsigned long ubr)
 #endif /* TX_WITH_INTERRUPT */
 }
 /*---------------------------------------------------------------------------*/
-
-#ifdef __IAR_SYSTEMS_ICC__
-#pragma vector=USCIAB0RX_VECTOR
-__interrupt void
-#else
-interrupt(USCIAB0RX_VECTOR)
-#endif
-uart0_rx_interrupt(void)
+ISR(USCIAB0RX, uart0_rx_interrupt)
 {
   uint8_t c;
 
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
-  leds_toggle(LEDS_RED);
   if(UCA0STAT & UCRXERR) {
     c = UCA0RXBUF;   /* Clear error flags by forcing a dummy read. */
   } else {
@@ -165,13 +157,7 @@ uart0_rx_interrupt(void)
 }
 /*---------------------------------------------------------------------------*/
 #if TX_WITH_INTERRUPT
-#ifdef __IAR_SYSTEMS_ICC__
-#pragma vector=USCIAB0TX_VECTOR
-__interrupt void
-#else
-interrupt(USCIAB0TX_VECTOR)
-#endif
-uart0_tx_interrupt(void)
+ISR(USCIAB0TX, uart0_tx_interrupt)
 {
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
   if((IFG2 & UCA0TXIFG)){

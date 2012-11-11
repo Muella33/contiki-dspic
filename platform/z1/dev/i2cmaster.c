@@ -39,6 +39,7 @@
  */
 
 #include "i2cmaster.h"
+#include "isr_compat.h"
 
 signed   char tx_byte_ctr, rx_byte_ctr;
 unsigned char rx_buf[2];
@@ -182,6 +183,14 @@ i2c_enable(void) {
   I2C_PxOUT |= (I2C_SDA | I2C_SCL);    // Select pull-up resistors
 }
 
+void
+i2c_disable(void) {
+  I2C_PxSEL &= ~(I2C_SDA | I2C_SCL);    // GPIO function selected
+  I2C_PxSEL2 &= ~(I2C_SDA | I2C_SCL);   // GPIO function selected
+  I2C_PxREN &= ~(I2C_SDA | I2C_SCL);    // Deactivate internal pull-up/-down resistors
+  I2C_PxOUT &= ~(I2C_SDA | I2C_SCL);    // Select pull-up resistors
+}
+
 /*----------------------------------------------------------------------------*/
 //------------------------------------------------------------------------------
 // void i2c_transmit_n(unsigned char byte_ctr, unsigned char *field)
@@ -201,13 +210,8 @@ i2c_transmit_n(uint8_t byte_ctr, uint8_t *tx_buf) {
 }
 
 /*----------------------------------------------------------------------------*/
-#ifdef __IAR_SYSTEMS_ICC__
-#pragma vector=USCIAB1TX_VECTOR
-__interrupt void
-#else
-interrupt (USCIAB1TX_VECTOR)
-#endif
-i2c_tx_interrupt (void) {
+ISR(USCIAB1TX, i2c_tx_interrupt)
+{
   // TX Part
   if (UC1IFG & UCB1TXIFG) {        // TX int. condition
     if (tx_byte_ctr == 0) {
@@ -237,18 +241,11 @@ i2c_tx_interrupt (void) {
 #endif
 }
 
-#ifdef __IAR_SYSTEMS_ICC__
-#pragma vector=USCIAB1RX_VECTOR
-__interrupt void
-#else
-interrupt (USCIAB1RX_VECTOR)
-#endif
-i2c_rx_interrupt(void) {
-  if (UCB1STAT & UCNACKIFG){
+ISR(USCIAB1RX, i2c_rx_interrupt)
+{
+  if(UCB1STAT & UCNACKIFG) {
     PRINTFDEBUG("!!! NACK received in RX\n");
     UCB1CTL1 |= UCTXSTP;
     UCB1STAT &= ~UCNACKIFG;
   }
 }
-
-

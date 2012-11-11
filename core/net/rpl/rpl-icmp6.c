@@ -155,7 +155,7 @@ dis_input(void)
   PRINTF("\n");
 
   for(instance = &instance_table[0], end = instance + RPL_MAX_INSTANCES; instance < end; ++instance) {
-    if(instance->used == 1 ) {
+    if(instance->used == 1) {
 #if RPL_LEAF_ONLY
       if(!uip_is_addr_mcast(&UIP_IP_BUF->destipaddr)) {
 #else /* !RPL_LEAF_ONLY */
@@ -177,7 +177,7 @@ dis_output(uip_ipaddr_t *addr)
   unsigned char *buffer;
   uip_ipaddr_t tmpaddr;
 
-  /* DAG Information Solicitation  - 2 bytes reserved */
+  /* DAG Information Solicitation  - 2 bytes reserved      */
   /*      0                   1                   2        */
   /*      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3  */
   /*     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ */
@@ -188,12 +188,14 @@ dis_output(uip_ipaddr_t *addr)
   buffer[0] = buffer[1] = 0;
 
   if(addr == NULL) {
-    PRINTF("RPL: Sending a DIS\n");
     uip_create_linklocal_rplnodes_mcast(&tmpaddr);
     addr = &tmpaddr;
-  } else {
-    PRINTF("RPL: Sending a unicast DIS\n");
   }
+
+  PRINTF("RPL: Sending a DIS to ");
+  PRINT6ADDR(addr);
+  PRINTF("\n");
+
   uip_icmp6_send(addr, ICMP6_RPL, RPL_CODE_DIS, 2);
 }
 /*---------------------------------------------------------------------------*/
@@ -244,11 +246,7 @@ dio_input(void)
     PRINTF("RPL: Neighbor already in neighbor cache\n");
   }
 
-  buffer_length = uip_len - uip_l2_l3_icmp_hdr_len;
-
-#if RPL_CONF_ADJUST_LLH_LEN
-  buffer_length += UIP_LLH_LEN; /* Add jackdaw, minimal-net ethernet header */
-#endif
+  buffer_length = uip_len - uip_l3_icmp_hdr_len;
 
   /* Process the DIO base option. */
   i = 0;
@@ -414,7 +412,8 @@ dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
 #endif /* !RPL_LEAF_ONLY */
 
 #if RPL_LEAF_ONLY
-  /* only respond to unicast DIS */
+  /* In leaf mode, we send DIO message only as unicasts in response to 
+     unicast DIS messages. */
   if(uc_addr == NULL) {
     return;
   }
@@ -579,11 +578,8 @@ dao_input(void)
   PRINTF("\n");
 
   buffer = UIP_ICMP_PAYLOAD;
-  buffer_length = uip_len - uip_l2_l3_icmp_hdr_len;
+  buffer_length = uip_len - uip_l3_icmp_hdr_len;
 
-#if RPL_CONF_ADJUST_LLH_LEN
-  buffer_length += UIP_LLH_LEN; /* Add jackdaw, minimal-net ethernet header */
-#endif
   pos = 0;
   instance_id = buffer[pos++];
 
@@ -708,26 +704,17 @@ dao_output(rpl_parent_t *n, uint8_t lifetime)
   rpl_instance_t *instance;
   unsigned char *buffer;
   uint8_t prefixlen;
-  uip_ipaddr_t addr;
   uip_ipaddr_t prefix;
   int pos;
 
   /* Destination Advertisement Object */
+
   if(get_global_addr(&prefix) == 0) {
     PRINTF("RPL: No global address set for this node - suppressing DAO\n");
     return;
   }
 
-  if(n == NULL) {
-    dag = rpl_get_any_dag();
-    if(dag == NULL) {
-      PRINTF("RPL: Did not join a DAG before sending DAO\n");
-      return;
-    }
-  } else {
-    dag = n->dag;
-  }
-
+  dag = n->dag;
   instance = dag->instance;
 
 #ifdef RPL_DEBUG_DAO_OUTPUT
@@ -772,23 +759,13 @@ dao_output(rpl_parent_t *n, uint8_t lifetime)
   buffer[pos++] = 0; /* path seq - ignored */
   buffer[pos++] = lifetime;
 
-  if(n == NULL) {
-    uip_create_linklocal_rplnodes_mcast(&addr);
-  } else {
-    uip_ipaddr_copy(&addr, &n->addr);
-  }
-
   PRINTF("RPL: Sending DAO with prefix ");
   PRINT6ADDR(&prefix);
   PRINTF(" to ");
-  if(n != NULL) {
-    PRINT6ADDR(&n->addr);
-  } else {
-    PRINTF("multicast address");
-  }
+  PRINT6ADDR(&n->addr);
   PRINTF("\n");
 
-  uip_icmp6_send(&addr, ICMP6_RPL, RPL_CODE_DAO, pos);
+  uip_icmp6_send(&n->addr, ICMP6_RPL, RPL_CODE_DAO, pos);
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -801,7 +778,7 @@ dao_ack_input(void)
   uint8_t status;
 
   buffer = UIP_ICMP_PAYLOAD;
-  buffer_length = uip_len - uip_l2_l3_icmp_hdr_len;
+  buffer_length = uip_len - uip_l3_icmp_hdr_len;
 
   instance_id = buffer[0];
   sequence = buffer[2];
